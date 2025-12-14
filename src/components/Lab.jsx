@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
-import { FilmIcon, LensIcon, CameraIcon } from './visuals/Icons';
+import { FilmIcon, LensIcon } from './visuals/Icons';
 import './Lab.css';
 
+// Tech Tree helpers
 const SENSOR_SIZES = [
-  { id: '1/2.55', name: '1/2.55"', cost: 500, locked: false },
-  { id: '1inch', name: '1 Inch', cost: 2000, locked: true },
-  { id: 'apsc', name: 'APS-C', cost: 5000, locked: true },
-  { id: 'fullframe', name: 'Full Frame', cost: 10000, locked: true },
-  { id: 'medium', name: 'Medium Format', cost: 20000, locked: true },
+  { id: '1/2.55', name: '1/2.55"', baseCost: 500, unlockId: null }, // Always available
+  { id: '1inch', name: '1 Inch', baseCost: 2000, unlockId: 'sensor_standard' },
+  { id: 'apsc', name: 'APS-C', baseCost: 5000, unlockId: 'sensor_advanced' },
+  { id: 'fullframe', name: 'Full Frame', baseCost: 10000, unlockId: 'sensor_advanced' },
+  { id: 'medium', name: 'Medium Format', baseCost: 20000, unlockId: 'sensor_advanced' },
 ];
 
 const PROCESSOR_ARCHITECTURES = [
@@ -17,32 +18,35 @@ const PROCESSOR_ARCHITECTURES = [
 ];
 
 function Lab({ onBack }) {
-  const { inventory, setInventory, money, setMoney } = useGame();
+  const { inventory, setInventory, unlocks } = useGame();
   const [activeTab, setActiveTab] = useState('sensor'); // sensor, film, lens, processor
 
   // Forms State
   const [sensorName, setSensorName] = useState('');
   const [selectedSensorSize, setSelectedSensorSize] = useState(SENSOR_SIZES[0].id);
 
-  const isLocked = (size) => {
-      if (!size.locked) return false;
-      const unlockedTech = inventory.unlockedTech || [];
-      return !unlockedTech.includes(size.id);
+  const isLocked = (unlockId) => {
+      if (!unlockId) return false;
+      return !unlocks.includes(unlockId);
   };
 
+  // Film State
   const [filmName, setFilmName] = useState('');
   const [filmType, setFilmType] = useState('35mm');
   const [filmISO, setFilmISO] = useState(400);
-  const [filmContrast, setFilmContrast] = useState(50); // 0-100
-  const [filmVib, setFilmVib] = useState(50); // Renamed to avoid clash with canister color
+  const [filmContrast, setFilmContrast] = useState(50);
+  const [filmVib, setFilmVib] = useState(50);
+  const [filmGrain, setFilmGrain] = useState(20);
   const [canisterColor, setCanisterColor] = useState('#facc15');
 
+  // Lens State
   const [lensName, setLensName] = useState('');
   const [lensType, setLensType] = useState('prime'); // prime, zoom
   const [focalLength, setFocalLength] = useState(50);
   const [zoomRange, setZoomRange] = useState('24-70');
   const [lensColor, setLensColor] = useState('#333333');
 
+  // Processor State
   const [procName, setProcName] = useState('');
   const [procArch, setProcArch] = useState(PROCESSOR_ARCHITECTURES[0].id);
 
@@ -57,7 +61,7 @@ function Lab({ onBack }) {
       type: 'sensor',
       size: sizeData.name,
       sizeId: sizeData.id,
-      quality: Math.floor(Math.random() * 10) + 10, // Base quality
+      quality: Math.floor(Math.random() * 10) + 10,
     };
 
     setInventory(prev => ({ ...prev, sensors: [...prev.sensors, newSensor] }));
@@ -67,6 +71,10 @@ function Lab({ onBack }) {
   const handleCreateFilm = () => {
     if (!filmName) return alert("Please name your film.");
 
+    // Cost logic adjustments
+    const is120 = filmType === '120';
+    // Base production cost could be stored here or calculated in Factory
+
     const newFilm = {
       id: Date.now(),
       name: filmName,
@@ -75,7 +83,8 @@ function Lab({ onBack }) {
       iso: filmISO,
       contrast: filmContrast,
       vibrance: filmVib,
-      color: canisterColor, // Visual color
+      grain: filmGrain,
+      color: canisterColor,
     };
 
     setInventory(prev => ({ ...prev, films: [...prev.films, newFilm] }));
@@ -131,7 +140,7 @@ function Lab({ onBack }) {
               <h4>Films ({inventory.films.length})</h4>
               <ul>{inventory.films.map(i => (
                   <li key={i.id} className="inv-item">
-                      <FilmIcon color={i.color} size={30} />
+                      <FilmIcon color={i.color} size={30} type={i.format} />
                       <span>{i.name} ({i.format}, ISO {i.iso})</span>
                   </li>
               ))}</ul>
@@ -139,12 +148,41 @@ function Lab({ onBack }) {
       </div>
   );
 
+  // Dynamic Photo Preview Styles
+  const photoPreviewStyle = {
+      width: '100%',
+      height: '200px',
+      objectFit: 'cover',
+      borderRadius: '8px',
+      filter: `
+        contrast(${50 + (filmContrast / 2)}%)
+        brightness(${100 + (filmISO > 800 ? (filmISO-800)/100 : 0)}%)
+        sepia(${100 - filmVib}%)
+        saturate(${filmVib * 1.5}%)
+        grayscale(${filmVib < 10 ? 1 : 0})
+      `,
+  };
+
+  const grainOverlayStyle = {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '200px',
+      pointerEvents: 'none',
+      opacity: filmGrain / 200, // 0 to 0.5
+      background: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`,
+      borderRadius: '8px'
+  };
+
   return (
     <div className="lab-container">
+      {/*
       <div className="lab-header">
-        <button onClick={onBack}>← Back</button>
+        {onBack && <button onClick={onBack}>← Back</button>}
         <h2>R&D Lab</h2>
       </div>
+      */}
 
       <div className="lab-tabs">
         <button className={activeTab === 'sensor' ? 'active' : ''} onClick={() => setActiveTab('sensor')}>Sensor</button>
@@ -162,7 +200,7 @@ function Lab({ onBack }) {
             <label>Size:</label>
             <select value={selectedSensorSize} onChange={e => setSelectedSensorSize(e.target.value)}>
               {SENSOR_SIZES.map(s => {
-                  const locked = isLocked(s);
+                  const locked = isLocked(s.unlockId);
                   return (
                     <option key={s.id} value={s.id} disabled={locked}>
                         {s.name} {locked ? '(Locked)' : ''}
@@ -222,34 +260,56 @@ function Lab({ onBack }) {
         )}
 
         {activeTab === 'film' && (
-             <div className="design-form">
-                <h3>Design Film</h3>
-                <label>Name: <input value={filmName} onChange={e => setFilmName(e.target.value)} /></label>
-                <label>Format:</label>
-                <select value={filmType} onChange={e => setFilmType(e.target.value)}>
-                    <option value="35mm">35mm</option>
-                    <option value="120">120 (Medium Format)</option>
-                </select>
-                <label>ISO: {filmISO}
-                    <input type="range" min="50" max="3200" step="50" value={filmISO} onChange={e => setFilmISO(e.target.value)} />
-                </label>
-                <label>Contrast: {filmContrast}%
-                    <input type="range" min="0" max="100" value={filmContrast} onChange={e => setFilmContrast(e.target.value)} />
-                </label>
-                 <label>Vibrance: {filmVib}% (0=B&W)
-                    <input type="range" min="0" max="100" value={filmVib} onChange={e => setFilmVib(e.target.value)} />
-                </label>
+             <div className="design-form two-col">
+                <div className="form-col">
+                    <h3>Design Film</h3>
+                    <label>Name: <input value={filmName} onChange={e => setFilmName(e.target.value)} /></label>
+                    <label>Format:</label>
+                    <select value={filmType} onChange={e => setFilmType(e.target.value)}>
+                        <option value="35mm">35mm</option>
+                        <option value="120" disabled={isLocked('film_type_120mm')}>
+                            120 (Medium Format) {isLocked('film_type_120mm') ? '(Locked)' : ''}
+                        </option>
+                    </select>
+                    <label>ISO: {filmISO}
+                        <input type="range" min="50" max="3200" step="50" value={filmISO} onChange={e => setFilmISO(e.target.value)} />
+                    </label>
+                    <label>Contrast: {filmContrast}%
+                        <input type="range" min="0" max="100" value={filmContrast} onChange={e => setFilmContrast(e.target.value)} />
+                    </label>
+                     <label>Vibrance: {filmVib}%
+                        <input type="range" min="0" max="100" value={filmVib} onChange={e => setFilmVib(e.target.value)} />
+                    </label>
+                     <label>Grain: {filmGrain}%
+                        <input type="range" min="0" max="100" value={filmGrain} onChange={e => setFilmGrain(e.target.value)} />
+                    </label>
 
-                <label>Canister Color:
-                    <input type="color" value={canisterColor} onChange={e => setCanisterColor(e.target.value)} style={{width: '100%', height: '40px'}}/>
-                </label>
-
-                <div className="preview-box">
-                    <p>Preview:</p>
-                    <FilmIcon color={canisterColor} size={100} />
+                    <label>Canister Color:
+                        <input type="color" value={canisterColor} onChange={e => setCanisterColor(e.target.value)} style={{width: '100%', height: '40px'}}/>
+                    </label>
+                    <button className="action-btn" onClick={handleCreateFilm}>Develop Film</button>
                 </div>
 
-                <button className="action-btn" onClick={handleCreateFilm}>Develop Film</button>
+                <div className="form-col preview-col">
+                    <p>Photo Preview</p>
+                    <div style={{position: 'relative'}}>
+                        {/* Placeholder generic street image from Unsplash or similar if online, but using CSS gradient or encoded SVG for safety in offline env */}
+                        <img
+                            src="https://images.unsplash.com/photo-1542038782534-3675a485104e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+                            alt="Street Preview"
+                            style={photoPreviewStyle}
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjY2NjIiAvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjIwIj5QcmV2aWV3IChObyBJbnRlcm5ldCk8L3RleHQ+PC9zdmc+';
+                            }}
+                        />
+                        <div style={grainOverlayStyle}></div>
+                    </div>
+                    <div className="preview-box">
+                        <p>Canister</p>
+                        <FilmIcon color={canisterColor} size={60} type={filmType} />
+                    </div>
+                </div>
              </div>
         )}
 

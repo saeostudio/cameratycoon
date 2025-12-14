@@ -9,31 +9,30 @@ function Sales({ onBack }) {
 
     // Launch Form State
     const [launchPrice, setLaunchPrice] = useState(500);
-    const [productionQty, setProductionQty] = useState(100);
+    const [marketingBudget, setMarketingBudget] = useState(0);
 
     const handleSelectProduct = (product) => {
         setSelectedProduct(product);
         if (!product.onSale) {
             // Defaults
-            setLaunchPrice(product.quality * 10); // Simple default
-            setProductionQty(100);
+            // If price was already set in factory (which it is now), use that as base
+            setLaunchPrice(product.price || product.quality * 10);
         }
     };
 
     const handleLaunch = () => {
         if (!selectedProduct) return;
 
-        const costPerUnit = calculateUnitCost(selectedProduct);
-        const totalProductionCost = costPerUnit * productionQty;
-
-        if (money < totalProductionCost) {
-            alert(`Not enough money! Need $${totalProductionCost}`);
+        // Marketing cost
+        if (money < marketingBudget) {
+            alert(`Not enough money for marketing! Need $${marketingBudget}`);
             return;
         }
+        if (marketingBudget > 0) {
+            setMoney(m => m - marketingBudget);
+        }
 
-        setMoney(m => m - totalProductionCost);
-
-        // Generate Reviews
+        // Generate Reviews (Initial buzz)
         const reviews = generateReviews(selectedProduct, launchPrice);
         const avgRating = reviews.reduce((a, b) => a + b.rating, 0) / reviews.length;
 
@@ -41,144 +40,171 @@ function Sales({ onBack }) {
             ...selectedProduct,
             onSale: true,
             price: launchPrice,
-            stock: productionQty,
             launchDate: new Date(date),
-            costPerUnit,
             reviews,
             rating: avgRating,
-            totalSold: 0,
-            revenueLastMonth: 0,
-            monthsOnMarket: 0
+            marketingBudget: marketingBudget // Could affect sales logic in Context
         };
 
         setProducts(prev => prev.map(p => p.id === selectedProduct.id ? updatedProduct : p));
         setSelectedProduct(null); // Return to list
     };
 
-    const calculateUnitCost = (p) => {
-        // A placeholder cost calculation
-        // Real implementation would sum component costs
-        return Math.floor(p.quality * 5);
-    };
-
     const generateReviews = (p, price) => {
-        // Logic:
-        // Quality vs Price
-        // Component balance (e.g. Good sensor but bad lens = mixed review)
+        // Value = Quality / Price ratio
+        // Ideal price is roughly Quality * 15 (updated logic)
+        const idealPrice = p.quality * 15;
+        const value = idealPrice / price;
 
-        // Simplified for now
-        const value = (p.quality * 10) / price; // 1.0 is fair value
         let baseRating = 3;
-        if (value > 1.2) baseRating += 1; // Good deal
-        if (value > 1.5) baseRating += 1; // Great deal
-        if (value < 0.8) baseRating -= 1; // Overpriced
-        if (value < 0.5) baseRating -= 1; // Ripoff
+        if (value > 1.2) baseRating += 1.5; // Good deal
+        if (value > 0.9 && value <= 1.2) baseRating += 0.5; // Fair
+        if (value < 0.7) baseRating -= 1; // Overpriced
+        if (value < 0.5) baseRating -= 2; // Ripoff
+
+        // Clamp
+        baseRating = Math.max(1, Math.min(5, baseRating));
 
         // Randomize slightly
         const reviews = [];
-        const comments = [
-            "Great camera for the price!",
-            "Battery life could be better.",
-            "Amazing image quality.",
-            "Too expensive for what you get.",
-            "Solid build quality.",
-            "The lens is a bit soft."
-        ];
+        const commentsPositive = ["Great camera!", "Love the colors.", "Best purchase.", "Solid build.", "Excellent value."];
+        const commentsNegative = ["Too expensive.", "Broke after a week.", "Poor battery.", "Focus is slow.", "Not worth it."];
+        const commentsNeutral = ["It's okay.", "Good for beginners.", "Average performance.", "Nice design but slow."];
 
         for (let i = 0; i < 4; i++) {
-            let rating = baseRating + (Math.random() > 0.5 ? 1 : -1) * Math.random();
-            rating = Math.max(1, Math.min(5, rating)); // Clamp 1-5
+            let rating = baseRating + (Math.random() - 0.5); // +/- 0.5 variation
+            rating = Math.max(1, Math.min(5, rating));
+
+            let pool = commentsNeutral;
+            if (rating > 4) pool = commentsPositive;
+            if (rating < 2.5) pool = commentsNegative;
+
             reviews.push({
                 id: i,
                 rating: Math.round(rating * 10) / 10,
-                text: comments[Math.floor(Math.random() * comments.length)]
+                text: pool[Math.floor(Math.random() * pool.length)]
             });
         }
         return reviews;
     };
 
     const renderLaunchForm = () => {
-        const cost = calculateUnitCost(selectedProduct);
+        // Estimated Unit Cost (reverse engineering or we should save it on product)
+        // Let's assume we want margin.
+        const recommendedMin = 100;
+        const recommendedMax = 5000;
+
         return (
             <div className="launch-form">
                 <h3>Launch {selectedProduct.name}</h3>
                 <p>Quality Score: {selectedProduct.quality}</p>
-                <p>Unit Cost: ${cost}</p>
+                <p>Stock: {selectedProduct.stock}</p>
 
                 <div className="form-group">
-                    <label>Price: ${launchPrice}</label>
-                    <input type="range" min={cost} max={cost * 5} value={launchPrice} onChange={e => setLaunchPrice(Number(e.target.value))} />
+                    <label>Set Retail Price: ${launchPrice}</label>
+                    <input type="range" min={recommendedMin} max={recommendedMax} step="10" value={launchPrice} onChange={e => setLaunchPrice(Number(e.target.value))} />
+                    <input type="number" value={launchPrice} onChange={e => setLaunchPrice(Number(e.target.value))} />
                 </div>
 
                 <div className="form-group">
-                    <label>Production Qty: {productionQty}</label>
-                    <input type="range" min="10" max="1000" step="10" value={productionQty} onChange={e => setProductionQty(Number(e.target.value))} />
+                    <label>Marketing Budget: ${marketingBudget}</label>
+                    <input type="range" min="0" max="50000" step="1000" value={marketingBudget} onChange={e => setMarketingBudget(Number(e.target.value))} />
+                    <p className="hint">Marketing boosts initial awareness.</p>
                 </div>
 
-                <p>Total Cost: ${cost * productionQty}</p>
-                <button className="launch-btn" onClick={handleLaunch}>RELEASE PRODUCT</button>
+                <button className="launch-btn" onClick={handleLaunch}>LAUNCH TO MARKET</button>
             </div>
         );
     };
 
     const renderIcon = (p, size=50) => {
-        if (p.productLine === 'film') return <FilmIcon color={p.color} size={size} />;
+        if (p.productLine === 'film') return <FilmIcon color={p.color} size={size} type={p.format} />;
         if (p.productLine === 'lens') return <LensIcon color={p.color} size={size} />;
         // Camera
-        return <CameraIcon bodyColor={p.bodyColor} gripColor={p.gripColor} styleId={p.body} size={size} />;
+        return <CameraIcon bodyColor={p.bodyColor} gripColor={p.gripColor} type={p.type} size={size} />;
     };
 
     const renderActiveProduct = () => (
         <div className="product-details">
             <div className="product-header-visual">
                 {renderIcon(selectedProduct, 80)}
-                <h3>{selectedProduct.name} (On Market)</h3>
-            </div>
-            <div className="stats-grid">
-                <div className="stat">Price: ${selectedProduct.price}</div>
-                <div className="stat">Stock: {selectedProduct.stock}</div>
-                <div className="stat">Sold: {selectedProduct.totalSold}</div>
-                <div className="stat">Rating: {selectedProduct.rating} ★</div>
+                <div className="header-text">
+                    <h3>{selectedProduct.name}</h3>
+                    <span className="badge">ON SALE</span>
+                </div>
             </div>
 
-            <h4>Recent Reviews</h4>
-            <div className="reviews-list">
-                {selectedProduct.reviews.map(r => (
-                    <div key={r.id} className="review-card">
-                        <span className="stars">{'★'.repeat(Math.round(r.rating))}</span>
-                        <p>"{r.text}"</p>
-                    </div>
-                ))}
+            <div className="stats-grid">
+                <div className="stat-box">
+                    <span className="label">Price</span>
+                    <span className="value">${selectedProduct.price}</span>
+                </div>
+                <div className="stat-box">
+                    <span className="label">Stock</span>
+                    <span className="value">{selectedProduct.stock}</span>
+                </div>
+                <div className="stat-box">
+                    <span className="label">Total Sold</span>
+                    <span className="value">{selectedProduct.totalSold || 0}</span>
+                </div>
+                <div className="stat-box">
+                    <span className="label">Rating</span>
+                    <span className="value">{selectedProduct.rating?.toFixed(1) || '-'} ★</span>
+                </div>
             </div>
-            <button onClick={() => setSelectedProduct(null)}>Back to List</button>
+
+            <div className="reviews-section">
+                <h4>Market Feedback</h4>
+                {selectedProduct.reviews.length === 0 ? <p>No reviews yet.</p> : (
+                    <div className="reviews-list">
+                        {selectedProduct.reviews.map(r => (
+                            <div key={r.id} className="review-card">
+                                <span className="stars">{'★'.repeat(Math.round(r.rating))}</span>
+                                <p>"{r.text}"</p>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <button className="back-btn" onClick={() => setSelectedProduct(null)}>Back to List</button>
         </div>
     );
 
     return (
         <div className="sales-container">
+            {/*
              <div className="sales-header">
                 <button onClick={onBack}>← Back</button>
                 <h2>Sales & Marketing</h2>
             </div>
+            */}
 
             <div className="sales-content">
                 {selectedProduct ? (
                     selectedProduct.onSale ? renderActiveProduct() : renderLaunchForm()
                 ) : (
                     <div className="product-list">
-                        <h3>Inventory</h3>
-                        {products.length === 0 && <p>No products manufactured yet.</p>}
+                        <h3>Inventory & Active Products</h3>
+                        {products.length === 0 && <p className="empty-msg">No products manufactured yet. Go to the Factory!</p>}
                         {products.map(p => (
                             <div key={p.id} className="product-card" onClick={() => handleSelectProduct(p)}>
                                 <div className="p-icon">
-                                    {renderIcon(p, 40)}
+                                    {renderIcon(p, 50)}
                                 </div>
                                 <div className="p-details-col">
                                     <div className="p-info">
                                         <span className="p-name">{p.name}</span>
-                                        <span className="p-status">{p.onSale ? '🟢 Selling' : '🔴 Unreleased'}</span>
+                                        {p.onSale ? (
+                                            <span className="p-tag sale">Selling</span>
+                                        ) : (
+                                            <span className="p-tag new">Ready to Launch</span>
+                                        )}
                                     </div>
-                                    {p.onSale && <span className="p-revenue">+${p.revenueLastMonth?.toLocaleString()} last month</span>}
+                                    <div className="p-metrics">
+                                        <span>Qty: {p.stock}</span>
+                                        {p.onSale && <span>Revenue: ${p.revenueLastMonth?.toLocaleString() || 0}/mo</span>}
+                                    </div>
                                 </div>
                             </div>
                         ))}

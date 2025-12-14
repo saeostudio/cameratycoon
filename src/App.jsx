@@ -4,73 +4,113 @@ import Lab from './components/Lab';
 import Factory from './components/Factory';
 import Sales from './components/Sales';
 import Staff from './components/Staff';
-import Shop from './components/Shop';
+import Research from './components/Research';
+import Onboarding from './components/Onboarding';
 import './index.css';
 
-function GameStatus() {
-  const { date, money, researchPoints } = useGame();
+function TopBar() {
+  const { date, money, researchPoints, fans, company } = useGame();
 
   const formatDate = (dateObj) => {
-    return dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    return dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'numeric', year: 'numeric' });
   };
 
   return (
-    <div className="status-bar">
-      <div className="status-item date">{formatDate(date)}</div>
-      <div className="status-item money">${money.toLocaleString()}</div>
-      <div className="status-item rp">{Math.floor(researchPoints)} RP</div>
-    </div>
+    <header className="top-bar">
+      <div className="status-group">
+        <div className="status-item">
+            <span className="status-value money">${money.toLocaleString()}</span>
+            <span>Cash</span>
+        </div>
+        <div className="status-item">
+            <span className="status-value rp">{Math.floor(researchPoints).toLocaleString()}</span>
+            <span>RP</span>
+        </div>
+        <div className="status-item">
+            <span className="status-value fans">{fans.toLocaleString()}</span>
+            <span>Fans</span>
+        </div>
+      </div>
+
+      <div className="status-group">
+          <div className="status-item">
+              <span className="status-value">{formatDate(date)}</span>
+              <span>Date</span>
+          </div>
+      </div>
+
+      <div className="company-info">
+        <span>{company.name}</span>
+        <span className="company-logo">{company.logo}</span>
+      </div>
+    </header>
   );
 }
 
-function MainMenu({ setView }) {
+function BottomNav({ currentView, setView }) {
+    const navItems = [
+        { id: 'lab', label: 'Lab', icon: '🔬' },
+        { id: 'factory', label: 'Factory', icon: '🏭' },
+        { id: 'sales', label: 'Sales', icon: '🛒' },
+        { id: 'research', label: 'Research', icon: '🧪' }, // Was 'shop'
+        { id: 'staff', label: 'Staff', icon: '👥' },
+    ];
+
     return (
-        <div className="main-menu">
-            <h2>Dashboard</h2>
-            <div className="menu-grid">
-                <button className="menu-btn" onClick={() => setView('factory')}>🏭 Manufacture</button>
-                <button className="menu-btn" onClick={() => setView('lab')}>🔬 Lab</button>
-                <button className="menu-btn" onClick={() => setView('sales')}>🛒 Sales</button>
-                <button className="menu-btn" onClick={() => setView('staff')}>💼 Staff</button>
-                <button className="menu-btn" onClick={() => setView('shop')}>🧪 Research</button>
-            </div>
-        </div>
-    )
+        <nav className="bottom-nav">
+            {navItems.map(item => (
+                <button
+                    key={item.id}
+                    className={`nav-item ${currentView === item.id ? 'active' : ''}`}
+                    onClick={() => setView(item.id)}
+                >
+                    <span className="nav-icon">{item.icon}</span>
+                    <span className="nav-label">{item.label}</span>
+                </button>
+            ))}
+        </nav>
+    );
 }
 
 function AppContent() {
-    const [view, setView] = useState('dashboard');
-    const { addProduct } = useGame();
+    const [view, setView] = useState('lab'); // Default to Lab? Or Factory?
+    const { company, addProduct } = useGame();
+
+    // If no company name, show onboarding
+    if (!company || !company.name) {
+        return <Onboarding />;
+    }
 
     const renderView = () => {
         switch(view) {
             case 'lab':
-                return <Lab onBack={() => setView('dashboard')} />;
+                return <Lab />;
             case 'factory':
-                return <Factory onBack={() => setView('dashboard')} onFinish={(product) => {
+                // Factory needs onFinish to redirect to Sales or Inventory?
+                // Old logic: setView('sales') on finish.
+                // New logic: Just add to inventory. User manually goes to Sales.
+                return <Factory onFinish={(product) => {
                     addProduct(product);
-                    setView('sales');
+                    // Optional: Notification?
                 }} />;
             case 'sales':
-                return <Sales onBack={() => setView('dashboard')} />;
+                return <Sales />;
             case 'staff':
-                return <Staff onBack={() => setView('dashboard')} />;
-            case 'shop':
-                return <Shop onBack={() => setView('dashboard')} />;
+                return <Staff />;
+            case 'research':
+                return <Research />;
             default:
-                return <MainMenu setView={setView} />;
+                return <Lab />;
         }
     };
 
     return (
         <div className="app-container">
-            <header>
-                <h1>Camera Tycoon</h1>
-                <GameStatus />
-            </header>
+            <TopBar />
             <main>
                 {renderView()}
             </main>
+            <BottomNav currentView={view} setView={setView} />
         </div>
     );
 }

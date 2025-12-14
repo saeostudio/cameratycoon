@@ -1,95 +1,142 @@
 import React from 'react';
 
-export const FilmIcon = ({ color = '#facc15', size = 50 }) => (
-    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Canister Body */}
-        <rect x="25" y="20" width="50" height="60" rx="5" fill={color} stroke="#333" strokeWidth="2"/>
-        {/* Cap Top */}
-        <rect x="22" y="15" width="56" height="10" rx="2" fill="#555" stroke="#333" strokeWidth="2"/>
-        {/* Cap Bottom */}
-        <rect x="22" y="75" width="56" height="10" rx="2" fill="#555" stroke="#333" strokeWidth="2"/>
-        {/* Label Area */}
-        <rect x="30" y="35" width="40" height="30" fill="white" fillOpacity="0.5"/>
-        {/* Film Strip sticking out */}
-        <path d="M75 30 L90 30 L90 50 L75 50" fill="#333" stroke="#333" strokeWidth="2"/>
-        <rect x="78" y="32" width="4" height="6" fill="white"/>
-        <rect x="85" y="32" width="4" height="6" fill="white"/>
-        <rect x="78" y="42" width="4" height="6" fill="white"/>
-        <rect x="85" y="42" width="4" height="6" fill="white"/>
-    </svg>
+// Common Gradients
+const DEFS = (
+    <defs>
+        <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#e2e8f0" />
+            <stop offset="50%" stopColor="#94a3b8" />
+            <stop offset="100%" stopColor="#475569" />
+        </linearGradient>
+        <linearGradient id="lensGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0.9" />
+        </linearGradient>
+        <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+            <feOffset dx="2" dy="2" result="offsetblur"/>
+            <feComponentTransfer>
+                <feFuncA type="linear" slope="0.3"/>
+            </feComponentTransfer>
+            <feMerge>
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+    </defs>
 );
+
+export const FilmIcon = ({ color = '#facc15', size = 50, type = '35mm' }) => {
+    // 120mm is taller/fatter
+    const is120 = type === '120';
+    const width = is120 ? 40 : 30;
+    const height = 60;
+    const x = 50 - (width/2);
+
+    return (
+        <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {DEFS}
+            <g filter="url(#dropShadow)">
+                {/* Spool Top */}
+                <ellipse cx="50" cy="20" rx={width/2 + 2} ry="5" fill="#333" />
+                {/* Body */}
+                <rect x={x} y="20" width={width} height={height} fill={color} stroke="#333" strokeWidth="1"/>
+                {/* Spool Bottom */}
+                <ellipse cx="50" cy="80" rx={width/2 + 2} ry="5" fill="#333" />
+                {/* Label */}
+                <rect x={x+2} y="30" width={width-4} height={40} fill="rgba(255,255,255,0.7)" />
+                <text x="50" y="55" fontSize="8" textAnchor="middle" fill="black" fontWeight="bold">
+                    {is120 ? '120' : '35mm'}
+                </text>
+            </g>
+        </svg>
+    );
+};
 
 export const LensIcon = ({ color = '#333', size = 50 }) => (
     <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Lens Barrel */}
-        <rect x="30" y="20" width="40" height="60" fill={color} stroke="#111" strokeWidth="2"/>
-        {/* Glass Reflection */}
-        <circle cx="50" cy="50" r="15" fill="#3b82f6" fillOpacity="0.3" stroke="#222" strokeWidth="2"/>
-        {/* Rings */}
-        <rect x="28" y="25" width="44" height="5" fill="#444"/>
-        <rect x="28" y="65" width="44" height="5" fill="#444"/>
-        {/* Highlight */}
-        <path d="M35 30 L35 70" stroke="white" strokeOpacity="0.2" strokeWidth="2"/>
+        {DEFS}
+        <g filter="url(#dropShadow)">
+            {/* Top Ring (Perspective) */}
+            <ellipse cx="50" cy="25" rx="20" ry="8" fill="#555" stroke="#222" strokeWidth="1"/>
+            {/* Body */}
+            <path d="M30 25 L30 75 A 20 8 0 0 0 70 75 L70 25" fill={color} stroke="#222" strokeWidth="1"/>
+            {/* Glass */}
+            <ellipse cx="50" cy="25" rx="16" ry="6" fill="url(#lensGrad)" />
+            {/* Reflection */}
+            <ellipse cx="45" cy="22" rx="5" ry="2" fill="white" fillOpacity="0.4" />
+        </g>
     </svg>
 );
 
-export const CameraIcon = ({ bodyColor = '#333', gripColor = '#111', styleId = 1, size = 50 }) => {
-    // Basic switch for styles (just variations in shape/viewfinder)
+export const CameraIcon = ({ bodyColor = '#333', gripColor = '#111', type = 'camera_type_film', size = 50 }) => {
 
-    // Style 1: Generic Rangefinder/Compact
-    const renderStyle1 = () => (
-        <>
-            <rect x="10" y="30" width="80" height="50" rx="5" fill={bodyColor} stroke="#111" strokeWidth="2"/>
-            {/* Grip */}
-            <rect x="15" y="30" width="10" height="50" fill={gripColor} fillOpacity="0.8"/>
-            {/* Lens Mount Area */}
-            <circle cx="50" cy="55" r="18" fill="#222" stroke="#444" strokeWidth="2"/>
-            <circle cx="50" cy="55" r="12" fill="#111"/>
-            <circle cx="55" cy="50" r="4" fill="white" fillOpacity="0.2"/>
-            {/* Viewfinder / Flash */}
-            <rect x="65" y="35" width="15" height="10" fill="#444"/>
-            <rect x="25" y="35" width="20" height="8" fill="#333"/>
-             {/* Shutter Button */}
-            <rect x="70" y="25" width="8" height="5" fill="#555"/>
-        </>
+    // Helper for Isometric/3D look
+    // Using simple shapes with perspective-like drawing
+
+    // 1. Film Camera (Classic SLR look)
+    const renderFilm = () => (
+        <g filter="url(#dropShadow)">
+            {/* Prism */}
+            <path d="M40 30 L50 20 L60 30 Z" fill="#222" stroke="#111" strokeWidth="1"/>
+            {/* Main Body */}
+            <rect x="15" y="30" width="70" height="40" rx="2" fill={bodyColor} stroke="#111" strokeWidth="1" />
+            {/* Lens Mount */}
+            <circle cx="50" cy="50" r="16" fill="#333" stroke="#555" strokeWidth="2" />
+            <circle cx="50" cy="50" r="12" fill="#111" />
+            <circle cx="53" cy="47" r="4" fill="white" fillOpacity="0.2" />
+            {/* Dials */}
+            <rect x="20" y="25" width="8" height="5" fill="#888" />
+            <rect x="70" y="25" width="10" height="5" fill="#888" />
+        </g>
     );
 
-    // Style 2: SLR bump
-    const renderStyle2 = () => (
-        <>
-             {/* Prism Bump */}
-            <path d="M35 30 L45 15 L55 15 L65 30 Z" fill={bodyColor} stroke="#111" strokeWidth="2"/>
-            {/* Body */}
-            <rect x="10" y="30" width="80" height="50" rx="4" fill={bodyColor} stroke="#111" strokeWidth="2"/>
-            {/* Grip */}
-            <path d="M10 30 L20 30 L20 80 L10 80 Z" fill={gripColor}/>
+    // 2. Compact (Small, rectangular, offset lens)
+    const renderCompact = () => (
+        <g filter="url(#dropShadow)">
+            <rect x="20" y="35" width="60" height="35" rx="4" fill={bodyColor} stroke="#111" strokeWidth="1" />
+            <circle cx="40" cy="52" r="10" fill="#222" stroke="#555" strokeWidth="1" />
+            <circle cx="40" cy="52" r="6" fill="url(#lensGrad)" />
+            <rect x="65" y="38" width="10" height="4" fill="#888" />
+        </g>
+    );
+
+    // 3. DSLR (Big grip, chunky prism)
+    const renderDSLR = () => (
+        <g filter="url(#dropShadow)">
+             {/* Grip Side */}
+            <path d="M20 30 L30 30 L30 75 L15 75 Q 10 75 10 65 L 12 40 Z" fill={gripColor} stroke="#111" />
+            {/* Main Block */}
+            <rect x="28" y="30" width="60" height="45" fill={bodyColor} stroke="#111" />
+            {/* Prism bump */}
+            <path d="M45 30 L50 20 L65 20 L70 30" fill={bodyColor} stroke="#111" />
             {/* Lens */}
-            <circle cx="50" cy="55" r="20" fill="#222" stroke="#444" strokeWidth="2"/>
-            <circle cx="50" cy="55" r="15" fill="#111"/>
-            {/* Shutter */}
-            <rect x="70" y="28" width="6" height="4" fill="silver"/>
-        </>
+            <circle cx="58" cy="52" r="18" fill="#222" stroke="#444" strokeWidth="3" />
+            <circle cx="58" cy="52" r="14" fill="url(#lensGrad)" />
+            <circle cx="62" cy="48" r="5" fill="white" fillOpacity="0.3" />
+        </g>
     );
 
-    // Style 3: Modern Mirrorless (Sharper edges)
-    const renderStyle3 = () => (
-         <>
-             {/* EVF Bump */}
-            <rect x="40" y="20" width="20" height="10" fill={bodyColor} stroke="#111" strokeWidth="2"/>
+    // 4. Mirrorless (Flat top, EVF optional, big lens)
+    const renderMirrorless = () => (
+        <g filter="url(#dropShadow)">
             {/* Body */}
-            <rect x="10" y="30" width="80" height="50" rx="2" fill={bodyColor} stroke="#111" strokeWidth="2"/>
-             {/* Grip */}
-            <rect x="75" y="35" width="10" height="40" rx="2" fill={gripColor}/>
-             {/* Lens */}
-            <circle cx="45" cy="55" r="18" fill="#222" stroke="silver" strokeWidth="1"/>
-            <circle cx="45" cy="55" r="14" fill="#000"/>
-        </>
+            <rect x="15" y="30" width="70" height="40" rx="1" fill={bodyColor} stroke="#111" strokeWidth="1" />
+            {/* EVF Hump (smaller) */}
+            <rect x="42" y="22" width="16" height="8" fill="#222" />
+            {/* Grip (smaller) */}
+            <rect x="15" y="30" width="10" height="40" fill={gripColor} />
+            {/* Large Lens */}
+            <circle cx="50" cy="50" r="19" fill="#111" stroke="#888" strokeWidth="1" />
+            <circle cx="50" cy="50" r="15" fill="url(#lensGrad)" />
+        </g>
     );
 
-    // Style 4+: Retro / Other variations (Mapped to 1-3 for simplicity for now, but rotated colors/shapes?)
-    // Let's just cycle the renderers based on ID modulo 3
+    // Dispatch
+    if (type === 'camera_type_compact') return <svg width={size} height={size} viewBox="0 0 100 100">{DEFS}{renderCompact()}</svg>;
+    if (type === 'camera_type_dslr') return <svg width={size} height={size} viewBox="0 0 100 100">{DEFS}{renderDSLR()}</svg>;
+    if (type === 'camera_type_mirrorless') return <svg width={size} height={size} viewBox="0 0 100 100">{DEFS}{renderMirrorless()}</svg>;
 
-    if ((styleId % 3) === 0) return <svg width={size} height={size} viewBox="0 0 100 100">{renderStyle3()}</svg>;
-    if ((styleId % 3) === 2) return <svg width={size} height={size} viewBox="0 0 100 100">{renderStyle2()}</svg>;
-    return <svg width={size} height={size} viewBox="0 0 100 100">{renderStyle1()}</svg>;
+    // Default Film
+    return <svg width={size} height={size} viewBox="0 0 100 100">{DEFS}{renderFilm()}</svg>;
 };

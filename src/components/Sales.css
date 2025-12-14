@@ -1,130 +1,237 @@
 .sales-container {
-    display: flex;
-    flex-direction: column;
+    padding: 10px;
     height: 100%;
+    overflow-y: auto;
+    padding-bottom: 80px;
 }
 
 .sales-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    padding: 10px;
-    background: #333;
-    border-bottom: 1px solid #444;
-}
-
-.sales-content {
-    padding: 20px;
-    flex: 1;
-    overflow-y: auto;
+    margin-bottom: 20px;
 }
 
 .product-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-}
-
-.product-card {
-    background: #222;
-    padding: 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    border: 1px solid #444;
-    display: flex;
-    align-items: center;
     gap: 15px;
 }
 
+.product-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
 .product-card:hover {
-    background: #2a2a2a;
+    background: rgba(255,255,255,0.1);
+    transform: translateX(5px);
 }
 
 .p-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 50px;
-    height: 50px;
-    background: #1a1a1a;
+    background: rgba(0,0,0,0.2);
+    padding: 10px;
     border-radius: 8px;
-    border: 1px solid #333;
 }
 
 .p-details-col {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
 .p-info {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+}
+
+.p-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: white;
+}
+
+.p-tag {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
     font-weight: bold;
 }
 
-.p-revenue {
-    display: block;
-    margin-top: 5px;
-    color: var(--accent-color);
-    font-size: 0.9rem;
+.p-tag.sale {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
 }
 
-.launch-form, .product-details {
-    background: #222;
-    padding: 20px;
-    border-radius: 8px;
+.p-tag.new {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+.p-metrics {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    display: flex;
+    gap: 15px;
+}
+
+.empty-msg {
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 40px;
+}
+
+/* Details View */
+.product-details {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .product-header-visual {
     display: flex;
     align-items: center;
     gap: 20px;
+    background: rgba(255,255,255,0.03);
+    padding: 20px;
+    border-radius: 12px;
     margin-bottom: 20px;
 }
 
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 10px;
-}
-
-.form-group input {
-    width: 100%;
-}
-
-.launch-btn {
-    width: 100%;
-    padding: 15px;
-    background: var(--accent-color);
+.header-text h3 {
+    margin: 0;
+    font-size: 1.5rem;
     color: white;
-    font-weight: bold;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
+}
+
+.badge {
+    background: #10b981;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 5px;
+    display: inline-block;
 }
 
 .stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 20px;
+    gap: 15px;
+    margin-bottom: 30px;
 }
 
-.stat {
-    background: #333;
-    padding: 10px;
-    border-radius: 4px;
-    text-align: center;
+.stat-box {
+    background: rgba(30, 41, 59, 0.6);
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-box .label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.stat-box .value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: white;
+    margin-top: 5px;
+}
+
+.reviews-section h4 {
+    margin-bottom: 15px;
+    color: #cbd5e1;
+}
+
+.reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .review-card {
-    background: #333;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 4px;
+    background: rgba(255,255,255,0.05);
+    padding: 10px 15px;
+    border-radius: 8px;
 }
 
-.stars {
-    color: gold;
+.review-card .stars {
+    color: #fbbf24;
+    letter-spacing: 2px;
+}
+
+.review-card p {
+    margin: 5px 0 0 0;
+    font-style: italic;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+}
+
+.launch-form {
+    background: rgba(30, 41, 59, 0.6);
+    padding: 25px;
+    border-radius: 12px;
+    color: white;
+}
+
+.form-group {
+    margin: 20px 0;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.hint {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-top: 5px;
+}
+
+.launch-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.back-btn {
+    margin-top: 20px;
+    background: transparent;
+    border: 1px solid #64748b;
+    color: #cbd5e1;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.back-btn:hover {
+    background: rgba(255,255,255,0.05);
+    color: white;
 }

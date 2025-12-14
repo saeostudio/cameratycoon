@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
-import { CameraIcon } from './visuals/Icons';
+import { CameraIcon, FilmIcon, LensIcon } from './visuals/Icons';
 import './Factory.css';
 
 const CAMERA_TYPES = [
-    { id: 'compact', name: 'Compact', type: 'digital', unlocked: true },
-    { id: 'slr', name: 'SLR', type: 'film', unlocked: true },
-    { id: 'dslr', name: 'DSLR', type: 'digital', unlocked: true },
-    { id: 'mirrorless', name: 'Mirrorless', type: 'digital', unlocked: true },
+    { id: 'camera_type_film', name: 'Film SLR', type: 'film', cost: 100 },
+    { id: 'camera_type_compact', name: 'Compact', type: 'digital', cost: 150 },
+    { id: 'camera_type_dslr', name: 'DSLR', type: 'digital', cost: 300 },
+    { id: 'camera_type_mirrorless', name: 'Mirrorless', type: 'digital', cost: 500 },
 ];
-
-const BODY_STYLES = Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Body Style ${i + 1}`, unlocked: i === 0 }));
 
 const BATTERIES = [
     { id: 'aa', name: 'AA Batteries', capacity: 100, cost: 5 },
@@ -26,8 +24,8 @@ const SCREENS = [
     { id: 'fully_articulated', name: '3" Fully Articulated', cost: 60, type: 'articulated' },
 ];
 
-function Factory({ onBack, onFinish }) {
-    const { inventory, setInventory, setResearchPoints, staff } = useGame();
+function Factory({ onFinish }) {
+    const { inventory, unlocks, setResearchPoints, staff } = useGame();
     const [step, setStep] = useState(0); // 0 = Product Line Selection
     const [productLine, setProductLine] = useState('camera'); // camera, film, lens
     const [isManufacturing, setIsManufacturing] = useState(false);
@@ -37,11 +35,9 @@ function Factory({ onBack, onFinish }) {
     const [config, setConfig] = useState({
         name: 'New Product',
         // Camera specific
-        type: 'compact',
-        body: 1,
+        type: 'camera_type_film',
         sensorId: '',
         processorId: '',
-        mountId: 'fixed',
         screenId: 'fixed_3',
         batteryId: 'aa',
 
@@ -50,11 +46,13 @@ function Factory({ onBack, onFinish }) {
         gripColor: '#111111',
 
         // Film/Lens specific
-        designId: '', // ID of the lab design to manufacture
+        designId: '',
 
         hasFlash: true,
-        features: []
     });
+
+    // Check unlocks
+    const availableCameraTypes = CAMERA_TYPES.filter(t => unlocks.includes(t.id));
 
     // Manufacturing Loop
     useEffect(() => {
@@ -66,9 +64,8 @@ function Factory({ onBack, onFinish }) {
                         finishManufacturing();
                         return 100;
                     }
-                    // +10 RP per second. If interval is 100ms, that's +1 RP per tick
                     setResearchPoints(rp => rp + 1);
-                    return prev + (100 / 300); // 100% in 300 ticks (30s) -> 0.33% per tick
+                    return prev + (100 / 50); // Speed up: 100% in 50 ticks (5s) for testing
                 });
             }, 100);
         }
@@ -81,15 +78,25 @@ function Factory({ onBack, onFinish }) {
         // Finalize Product Data
         const quality = calculateQuality();
 
+        // Calculate Base Cost
+        let unitCost = 50;
+        if (productLine === 'camera') {
+            const camType = CAMERA_TYPES.find(c => c.id === config.type);
+            unitCost += camType ? camType.cost : 0;
+            // Add component costs
+            // ...
+        } else if (productLine === 'film' && config.designId) {
+             const design = inventory.films.find(i => i.id === config.designId);
+             if (design && design.format === '120') unitCost += 20; // 120mm is more expensive
+        }
+
         let extraProps = {};
-        // If it's a design-based product, copy visual props from the design
         if (productLine !== 'camera' && config.designId) {
              const list = productLine === 'film' ? inventory.films : inventory.lenses;
              const design = list.find(i => i.id === config.designId);
              if (design) {
                  extraProps = {
                      color: design.color,
-                     // Copy other relevant props if needed
                      type: design.type,
                      format: design.format,
                      iso: design.iso,
@@ -105,19 +112,18 @@ function Factory({ onBack, onFinish }) {
             productLine,
             id: Date.now(),
             quality,
-            reviews: []
+            price: unitCost * 3, // Default markup
+            reviews: [],
+            stock: 100, // Initial batch
+            monthsOnMarket: 0
         };
 
         onFinish(finalProduct);
     };
 
     const calculateQuality = () => {
-        // Base quality
         let base = 50;
-
-        // Add staff bonus
         const staffBonus = staff.reduce((acc, s) => acc + (s.skill || 0), 0);
-
         return Math.min(100, Math.floor(base + (staffBonus * 0.5) + (Math.random() * 10)));
     };
 
@@ -125,8 +131,9 @@ function Factory({ onBack, onFinish }) {
         if (!config.name) return alert("Please name your product.");
 
         if (productLine === 'camera') {
-            if (config.type !== 'slr' && !config.sensorId) return alert("Digital cameras need a sensor!");
-            if (config.type !== 'slr' && !config.processorId) return alert("Digital cameras need a processor!");
+            const isDigital = config.type !== 'camera_type_film';
+            if (isDigital && !config.sensorId) return alert("Digital cameras need a sensor!");
+            if (isDigital && !config.processorId) return alert("Digital cameras need a processor!");
         } else {
             if (!config.designId) return alert(`Please select a ${productLine} design!`);
         }
@@ -138,9 +145,18 @@ function Factory({ onBack, onFinish }) {
         <div className="factory-step">
              <h3>Select Production Line</h3>
              <div className="grid-options">
-                 <button className={`option-card ${productLine === 'camera' ? 'selected' : ''}`} onClick={() => setProductLine('camera')}>Camera</button>
-                 <button className={`option-card ${productLine === 'film' ? 'selected' : ''}`} onClick={() => setProductLine('film')}>Film</button>
-                 <button className={`option-card ${productLine === 'lens' ? 'selected' : ''}`} onClick={() => setProductLine('lens')}>Lens</button>
+                 <button className={`option-card ${productLine === 'camera' ? 'selected' : ''}`} onClick={() => setProductLine('camera')}>
+                    <CameraIcon size={40} />
+                    <span>Camera</span>
+                 </button>
+                 <button className={`option-card ${productLine === 'film' ? 'selected' : ''}`} onClick={() => setProductLine('film')}>
+                    <FilmIcon size={40} />
+                    <span>Film</span>
+                 </button>
+                 <button className={`option-card ${productLine === 'lens' ? 'selected' : ''}`} onClick={() => setProductLine('lens')}>
+                    <LensIcon size={40} />
+                    <span>Lens</span>
+                 </button>
              </div>
              <button className="next-btn" onClick={() => setStep(1)}>Next</button>
         </div>
@@ -153,9 +169,9 @@ function Factory({ onBack, onFinish }) {
                     <h3>Step 1: Camera Design</h3>
                     <label>Model Name: <input value={config.name} onChange={e => setConfig({...config, name: e.target.value})} /></label>
 
-                    <label>Type:</label>
+                    <label>Body Chassis Type:</label>
                     <div className="grid-options">
-                        {CAMERA_TYPES.map(t => (
+                        {availableCameraTypes.map(t => (
                             <button
                                 key={t.id}
                                 className={`option-card ${config.type === t.id ? 'selected' : ''}`}
@@ -178,7 +194,7 @@ function Factory({ onBack, onFinish }) {
                     <div className="preview-container">
                         <p>Preview:</p>
                         <CameraIcon
-                            styleId={config.body} // We use 'body' ID for style variation
+                            type={config.type}
                             bodyColor={config.bodyColor}
                             gripColor={config.gripColor}
                             size={120}
@@ -189,7 +205,6 @@ function Factory({ onBack, onFinish }) {
                 </div>
             );
         } else {
-            // Film or Lens Selection
             const list = productLine === 'film' ? inventory.films : inventory.lenses;
             return (
                 <div className="factory-step">
@@ -204,7 +219,12 @@ function Factory({ onBack, onFinish }) {
                                     className={`mini-card ${config.designId === item.id ? 'selected' : ''}`}
                                     onClick={() => setConfig({...config, designId: item.id, name: item.name})}
                                 >
-                                    {item.name}
+                                    {productLine === 'film' ? (
+                                        <FilmIcon color={item.color} type={item.format} size={30} />
+                                    ) : (
+                                        <LensIcon color={item.color} size={30} />
+                                    )}
+                                    <span>{item.name}</span>
                                 </button>
                             ))}
                         </div>
@@ -216,25 +236,11 @@ function Factory({ onBack, onFinish }) {
     };
 
     const renderStep2_Components = () => {
-        const isDigital = config.type !== 'slr';
+        const isDigital = config.type !== 'camera_type_film';
 
         return (
             <div className="factory-step">
                 <h3>Step 2: Internals</h3>
-
-                <label>Body Style:</label>
-                <div className="scroll-options">
-                    {BODY_STYLES.map(b => (
-                        <button
-                            key={b.id}
-                            disabled={!b.unlocked}
-                            className={`mini-card ${config.body === b.id ? 'selected' : ''}`}
-                            onClick={() => setConfig({...config, body: b.id})}
-                        >
-                            {b.name}
-                        </button>
-                    ))}
-                </div>
 
                 {isDigital && (
                     <>
@@ -273,9 +279,15 @@ function Factory({ onBack, onFinish }) {
             <div className="summary">
                 <p><strong>Product:</strong> {config.name}</p>
                 <p><strong>Line:</strong> {productLine.toUpperCase()}</p>
+                {/* 3D Isometric floor Illusion here */}
+                <div className="isometric-floor">
+                    <div className="worker-node">👷</div>
+                    <div className="worker-node" style={{top: '40%', left: '60%'}}>👷</div>
+                    <div className="worker-node" style={{top: '70%', left: '30%'}}>📦</div>
+                </div>
             </div>
             {!isManufacturing ? (
-                <button className="start-build-btn" onClick={handleStartManufacturing}>Start Production (30s)</button>
+                <button className="start-build-btn" onClick={handleStartManufacturing}>Start Production (5s)</button>
             ) : (
                 <div className="manufacturing-status">
                     <p>Manufacturing... (+10 RP/sec)</p>
@@ -287,10 +299,12 @@ function Factory({ onBack, onFinish }) {
 
     return (
         <div className="factory-container">
+            {/*
             <div className="factory-header">
                 <button onClick={onBack} disabled={isManufacturing}>← Exit</button>
                 <h2>Factory</h2>
             </div>
+            */}
             <div className="factory-content">
                 {step === 0 && renderStep0_Line()}
                 {step === 1 && renderStep1_Configuration()}
