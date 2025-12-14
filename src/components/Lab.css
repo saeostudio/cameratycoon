@@ -1,0 +1,91 @@
+.lab-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.lab-header {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background: #333;
+    border-bottom: 1px solid #444;
+}
+
+.lab-header h2 {
+    margin: 0;
+    margin-left: 20px;
+    flex: 1;
+    text-align: center;
+}
+
+.lab-tabs {
+    display: flex;
+    overflow-x: auto;
+    background: #252525;
+}
+
+.lab-tabs button {
+    flex: 1;
+    padding: 12px;
+    background: transparent;
+    border: none;
+    color: #888;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+}
+
+.lab-tabs button.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.lab-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.design-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.design-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-weight: bold;
+}
+
+.design-form input, .design-form select {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #555;
+    background: #222;
+    color: white;
+}
+
+.action-btn {
+    margin-top: 20px;
+    background: var(--accent-color);
+    color: white;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.inventory-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.inventory-list li {
+    background: #333;
+    margin-bottom: 5px;
+    padding: 8px;
+    border-radius: 4px;
+}
