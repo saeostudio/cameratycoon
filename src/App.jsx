@@ -73,7 +73,7 @@ function BottomNav({ currentView, setView }) {
 }
 
 function AppContent() {
-    const [view, setView] = useState('lab'); // Default to Lab? Or Factory?
+    const [view, setView] = useState('lab');
     const { company, addProduct } = useGame();
 
     // If no company name, show onboarding
@@ -86,12 +86,10 @@ function AppContent() {
             case 'lab':
                 return <Lab />;
             case 'factory':
-                // Factory needs onFinish to redirect to Sales or Inventory?
-                // Old logic: setView('sales') on finish.
-                // New logic: Just add to inventory. User manually goes to Sales.
+                // Auto-redirect to Sales on finish
                 return <Factory onFinish={(product) => {
                     addProduct(product);
-                    // Optional: Notification?
+                    setView('sales');
                 }} />;
             case 'sales':
                 return <Sales />;

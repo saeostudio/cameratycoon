@@ -149,18 +149,21 @@ function Lab({ onBack }) {
   );
 
   // Dynamic Photo Preview Styles
+  // B&W uses grayscale(100%).
+  // Color uses Sepia + Saturation to simulate the warm/retro look of the vacation photo
+  const isBW = filmVib < 10;
+
   const photoPreviewStyle = {
       width: '100%',
       height: '200px',
       objectFit: 'cover',
       borderRadius: '8px',
-      filter: `
-        contrast(${50 + (filmContrast / 2)}%)
-        brightness(${100 + (filmISO > 800 ? (filmISO-800)/100 : 0)}%)
-        sepia(${100 - filmVib}%)
-        saturate(${filmVib * 1.5}%)
-        grayscale(${filmVib < 10 ? 1 : 0})
-      `,
+      // Placeholder background if image not loaded
+      backgroundColor: '#888',
+      // Dynamic filters
+      filter: isBW
+        ? `grayscale(100%) contrast(${50 + (filmContrast / 2)}%) brightness(${100 + (filmISO > 800 ? (filmISO-800)/100 : 0)}%)`
+        : `sepia(20%) saturate(${80 + filmVib}%) contrast(${80 + (filmContrast / 3)}%) brightness(${100 + (filmISO > 800 ? (filmISO-800)/200 : 0)}%)`
   };
 
   const grainOverlayStyle = {
@@ -293,16 +296,33 @@ function Lab({ onBack }) {
                 <div className="form-col preview-col">
                     <p>Photo Preview</p>
                     <div style={{position: 'relative'}}>
-                        {/* Placeholder generic street image from Unsplash or similar if online, but using CSS gradient or encoded SVG for safety in offline env */}
+                        {/*
+                            Using a generic fallback src initially.
+                            We try to use the asset 'lab_preview.jpg' if available (which it isn't right now, but we prepare for it).
+                            Otherwise we fallback to a simple gradient or the 'no internet' svg.
+                        */}
                         <img
-                            src="https://images.unsplash.com/photo-1542038782534-3675a485104e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                            alt="Street Preview"
+                            src="/assets/lab_preview.jpg"
+                            alt="Lab Simulation Preview"
                             style={photoPreviewStyle}
                             onError={(e) => {
                                 e.target.onerror = null;
-                                e.target.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjY2NjIiAvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjIwIj5QcmV2aWV3IChObyBJbnRlcm5ldCk8L3RleHQ+PC9zdmc+';
+                                e.target.style.display = 'none'; // Hide broken image
+                                e.target.parentNode.style.backgroundColor = '#ccc'; // Show fallback color on parent
+                                e.target.parentNode.style.height = '200px';
+                                e.target.parentNode.style.borderRadius = '8px';
                             }}
                         />
+                         {/* Fallback div if image fails/is missing */}
+                        <div className="fallback-preview" style={{
+                            ...photoPreviewStyle,
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            zIndex: -1,
+                            background: 'linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%)' // Generic vacation-y gradient
+                        }}></div>
+
                         <div style={grainOverlayStyle}></div>
                     </div>
                     <div className="preview-box">

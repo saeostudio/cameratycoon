@@ -15,8 +15,13 @@ function Sales({ onBack }) {
         setSelectedProduct(product);
         if (!product.onSale) {
             // Defaults
-            // If price was already set in factory (which it is now), use that as base
-            setLaunchPrice(product.price || product.quality * 10);
+            // Better defaults based on product line
+            let defaultPrice = product.price || product.quality * 10;
+            if (product.productLine === 'film') {
+                 // Target 5-20 EUR range
+                 defaultPrice = Math.max(5, Math.min(20, Math.round(product.quality / 5)));
+            }
+            setLaunchPrice(defaultPrice);
         }
     };
 
@@ -43,36 +48,41 @@ function Sales({ onBack }) {
             launchDate: new Date(date),
             reviews,
             rating: avgRating,
-            marketingBudget: marketingBudget // Could affect sales logic in Context
+            marketingBudget: marketingBudget
         };
 
         setProducts(prev => prev.map(p => p.id === selectedProduct.id ? updatedProduct : p));
-        setSelectedProduct(null); // Return to list
+        setSelectedProduct(null);
     };
 
     const generateReviews = (p, price) => {
-        // Value = Quality / Price ratio
-        // Ideal price is roughly Quality * 15 (updated logic)
-        const idealPrice = p.quality * 15;
+        // Updated Value Logic
+        let idealPrice = p.quality * 15;
+
+        // Adjust for film (expecting much lower prices)
+        if (p.productLine === 'film') {
+            idealPrice = p.quality * 0.25; // Quality 50 -> Ideal 12.50
+        }
+
         const value = idealPrice / price;
 
         let baseRating = 3;
-        if (value > 1.2) baseRating += 1.5; // Good deal
-        if (value > 0.9 && value <= 1.2) baseRating += 0.5; // Fair
-        if (value < 0.7) baseRating -= 1; // Overpriced
-        if (value < 0.5) baseRating -= 2; // Ripoff
+        if (value > 1.2) baseRating += 1.5;
+        if (value > 0.9 && value <= 1.2) baseRating += 0.5;
+        if (value < 0.7) baseRating -= 1;
+        if (value < 0.5) baseRating -= 2;
 
         // Clamp
         baseRating = Math.max(1, Math.min(5, baseRating));
 
-        // Randomize slightly
+        // Randomize
         const reviews = [];
-        const commentsPositive = ["Great camera!", "Love the colors.", "Best purchase.", "Solid build.", "Excellent value."];
-        const commentsNegative = ["Too expensive.", "Broke after a week.", "Poor battery.", "Focus is slow.", "Not worth it."];
-        const commentsNeutral = ["It's okay.", "Good for beginners.", "Average performance.", "Nice design but slow."];
+        const commentsPositive = ["Great value!", "Love it.", "Top quality.", "Good stuff."];
+        const commentsNegative = ["Too expensive.", "Garbage.", "Ripoff."];
+        const commentsNeutral = ["It's okay.", "Decent."];
 
         for (let i = 0; i < 4; i++) {
-            let rating = baseRating + (Math.random() - 0.5); // +/- 0.5 variation
+            let rating = baseRating + (Math.random() - 0.5);
             rating = Math.max(1, Math.min(5, rating));
 
             let pool = commentsNeutral;
@@ -89,10 +99,10 @@ function Sales({ onBack }) {
     };
 
     const renderLaunchForm = () => {
-        // Estimated Unit Cost (reverse engineering or we should save it on product)
-        // Let's assume we want margin.
-        const recommendedMin = 100;
-        const recommendedMax = 5000;
+        const isFilm = selectedProduct.productLine === 'film';
+        const recommendedMin = isFilm ? 1 : 100;
+        const recommendedMax = isFilm ? 50 : 5000;
+        const step = isFilm ? 0.5 : 10;
 
         return (
             <div className="launch-form">
@@ -102,7 +112,7 @@ function Sales({ onBack }) {
 
                 <div className="form-group">
                     <label>Set Retail Price: ${launchPrice}</label>
-                    <input type="range" min={recommendedMin} max={recommendedMax} step="10" value={launchPrice} onChange={e => setLaunchPrice(Number(e.target.value))} />
+                    <input type="range" min={recommendedMin} max={recommendedMax} step={step} value={launchPrice} onChange={e => setLaunchPrice(Number(e.target.value))} />
                     <input type="number" value={launchPrice} onChange={e => setLaunchPrice(Number(e.target.value))} />
                 </div>
 
@@ -120,7 +130,6 @@ function Sales({ onBack }) {
     const renderIcon = (p, size=50) => {
         if (p.productLine === 'film') return <FilmIcon color={p.color} size={size} type={p.format} />;
         if (p.productLine === 'lens') return <LensIcon color={p.color} size={size} />;
-        // Camera
         return <CameraIcon bodyColor={p.bodyColor} gripColor={p.gripColor} type={p.type} size={size} />;
     };
 
@@ -173,13 +182,6 @@ function Sales({ onBack }) {
 
     return (
         <div className="sales-container">
-            {/*
-             <div className="sales-header">
-                <button onClick={onBack}>← Back</button>
-                <h2>Sales & Marketing</h2>
-            </div>
-            */}
-
             <div className="sales-content">
                 {selectedProduct ? (
                     selectedProduct.onSale ? renderActiveProduct() : renderLaunchForm()

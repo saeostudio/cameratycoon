@@ -11,10 +11,10 @@ const CAMERA_TYPES = [
 ];
 
 const BATTERIES = [
-    { id: 'aa', name: 'AA Batteries', capacity: 100, cost: 5 },
-    { id: '2cr5', name: '2CR5', capacity: 300, cost: 15 },
-    { id: 'np-w126s', name: 'NP-W126S', capacity: 800, cost: 30 },
-    { id: 'np-w235', name: 'NP-W235', capacity: 1500, cost: 50 },
+    { id: 'aa', name: 'AA Batteries', capacity: 100, cost: 5, unlockId: null },
+    { id: '2cr5', name: '2CR5', capacity: 300, cost: 15, unlockId: 'battery_high_cap' },
+    { id: 'np-w126s', name: 'NP-W126S', capacity: 800, cost: 30, unlockId: 'battery_high_cap' },
+    { id: 'np-w235', name: 'NP-W235', capacity: 1500, cost: 50, unlockId: 'battery_high_cap' },
 ];
 
 const SCREENS = [
@@ -87,7 +87,8 @@ function Factory({ onFinish }) {
             // ...
         } else if (productLine === 'film' && config.designId) {
              const design = inventory.films.find(i => i.id === config.designId);
-             if (design && design.format === '120') unitCost += 20; // 120mm is more expensive
+             unitCost = 2; // Drastically lower base cost for film
+             if (design && design.format === '120') unitCost += 3;
         }
 
         let extraProps = {};
@@ -139,6 +140,11 @@ function Factory({ onFinish }) {
         }
 
         setIsManufacturing(true);
+    };
+
+    const isLocked = (unlockId) => {
+        if (!unlockId) return false;
+        return !unlocks.includes(unlockId);
     };
 
     const renderStep0_Line = () => (
@@ -265,7 +271,14 @@ function Factory({ onFinish }) {
 
                 <label>Battery:</label>
                 <select value={config.batteryId} onChange={e => setConfig({...config, batteryId: e.target.value})}>
-                    {BATTERIES.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    {BATTERIES.map(b => {
+                         const locked = isLocked(b.unlockId);
+                         return (
+                            <option key={b.id} value={b.id} disabled={locked}>
+                                {b.name} {locked ? '(Locked)' : ''}
+                            </option>
+                         );
+                    })}
                 </select>
 
                 <button className="next-btn" onClick={() => setStep(3)}>Next: Review & Build</button>
@@ -279,11 +292,17 @@ function Factory({ onFinish }) {
             <div className="summary">
                 <p><strong>Product:</strong> {config.name}</p>
                 <p><strong>Line:</strong> {productLine.toUpperCase()}</p>
-                {/* 3D Isometric floor Illusion here */}
-                <div className="isometric-floor">
-                    <div className="worker-node">👷</div>
-                    <div className="worker-node" style={{top: '40%', left: '60%'}}>👷</div>
-                    <div className="worker-node" style={{top: '70%', left: '30%'}}>📦</div>
+                {/* Visuals Update: Industrial Grid */}
+                <div className="factory-visuals-grid" style={{
+                    backgroundImage: 'linear-gradient(to bottom, #2c3e50, #000000)',
+                    backgroundSize: 'cover'
+                }}>
+                    <div className="grid-cell" style={{opacity: 0.5}}>📦</div>
+                    <div className="grid-cell"></div>
+                    <div className="grid-cell" style={{opacity: 0.5}}>📦</div>
+                    <div className="grid-cell"></div>
+                    <div className="grid-cell">👷</div>
+                    <div className="grid-cell"></div>
                 </div>
             </div>
             {!isManufacturing ? (
@@ -299,12 +318,6 @@ function Factory({ onFinish }) {
 
     return (
         <div className="factory-container">
-            {/*
-            <div className="factory-header">
-                <button onClick={onBack} disabled={isManufacturing}>← Exit</button>
-                <h2>Factory</h2>
-            </div>
-            */}
             <div className="factory-content">
                 {step === 0 && renderStep0_Line()}
                 {step === 1 && renderStep1_Configuration()}

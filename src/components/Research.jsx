@@ -14,7 +14,7 @@ export const TECH_TREE = {
     'camera_type_compact': {
         name: 'Compact Digital',
         description: 'Point and shoot convenience.',
-        cost: 500, // Reduced from hypothetical 1000
+        cost: 500,
         type: 'camera_type',
         requires: ['camera_type_film']
     },
@@ -64,6 +64,13 @@ export const TECH_TREE = {
         name: 'Li-Ion Battery',
         description: 'Rechargeable power.',
         cost: 600,
+        type: 'component',
+        requires: []
+    },
+    'battery_high_cap': {
+        name: 'High Capacity Batteries',
+        description: 'Longer life for modern cameras.',
+        cost: 300,
         type: 'component',
         requires: []
     }
