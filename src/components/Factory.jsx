@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
+import { CameraIcon } from './visuals/Icons';
 import './Factory.css';
 
 const CAMERA_TYPES = [
@@ -43,6 +44,11 @@ function Factory({ onBack, onFinish }) {
         mountId: 'fixed',
         screenId: 'fixed_3',
         batteryId: 'aa',
+
+        // Visuals
+        bodyColor: '#333333',
+        gripColor: '#111111',
+
         // Film/Lens specific
         designId: '', // ID of the lab design to manufacture
 
@@ -74,8 +80,28 @@ function Factory({ onBack, onFinish }) {
 
         // Finalize Product Data
         const quality = calculateQuality();
+
+        let extraProps = {};
+        // If it's a design-based product, copy visual props from the design
+        if (productLine !== 'camera' && config.designId) {
+             const list = productLine === 'film' ? inventory.films : inventory.lenses;
+             const design = list.find(i => i.id === config.designId);
+             if (design) {
+                 extraProps = {
+                     color: design.color,
+                     // Copy other relevant props if needed
+                     type: design.type,
+                     format: design.format,
+                     iso: design.iso,
+                     lensType: design.lensType,
+                     focalLength: design.focalLength
+                 };
+             }
+        }
+
         let finalProduct = {
             ...config,
+            ...extraProps,
             productLine,
             id: Date.now(),
             quality,
@@ -124,8 +150,10 @@ function Factory({ onBack, onFinish }) {
         if (productLine === 'camera') {
             return (
                 <div className="factory-step">
-                    <h3>Step 1: Camera Type</h3>
+                    <h3>Step 1: Camera Design</h3>
                     <label>Model Name: <input value={config.name} onChange={e => setConfig({...config, name: e.target.value})} /></label>
+
+                    <label>Type:</label>
                     <div className="grid-options">
                         {CAMERA_TYPES.map(t => (
                             <button
@@ -137,6 +165,26 @@ function Factory({ onBack, onFinish }) {
                             </button>
                         ))}
                     </div>
+
+                    <div className="color-config">
+                        <label>Body Color:
+                            <input type="color" value={config.bodyColor} onChange={e => setConfig({...config, bodyColor: e.target.value})} />
+                        </label>
+                         <label>Grip Color:
+                            <input type="color" value={config.gripColor} onChange={e => setConfig({...config, gripColor: e.target.value})} />
+                        </label>
+                    </div>
+
+                    <div className="preview-container">
+                        <p>Preview:</p>
+                        <CameraIcon
+                            styleId={config.body} // We use 'body' ID for style variation
+                            bodyColor={config.bodyColor}
+                            gripColor={config.gripColor}
+                            size={120}
+                        />
+                    </div>
+
                     <button className="next-btn" onClick={() => setStep(2)}>Next: Components</button>
                 </div>
             );

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
+import { FilmIcon, LensIcon, CameraIcon } from './visuals/Icons';
 import './Lab.css';
 
 const SENSOR_SIZES = [
@@ -33,12 +34,14 @@ function Lab({ onBack }) {
   const [filmType, setFilmType] = useState('35mm');
   const [filmISO, setFilmISO] = useState(400);
   const [filmContrast, setFilmContrast] = useState(50); // 0-100
-  const [filmColor, setFilmColor] = useState(50); // 0-100 (B&W to Vibrant)
+  const [filmVib, setFilmVib] = useState(50); // Renamed to avoid clash with canister color
+  const [canisterColor, setCanisterColor] = useState('#facc15');
 
   const [lensName, setLensName] = useState('');
   const [lensType, setLensType] = useState('prime'); // prime, zoom
   const [focalLength, setFocalLength] = useState(50);
-  const [zoomRange, setZoomRange] = useState('24-70'); // Just a string for now
+  const [zoomRange, setZoomRange] = useState('24-70');
+  const [lensColor, setLensColor] = useState('#333333');
 
   const [procName, setProcName] = useState('');
   const [procArch, setProcArch] = useState(PROCESSOR_ARCHITECTURES[0].id);
@@ -71,7 +74,8 @@ function Lab({ onBack }) {
       format: filmType,
       iso: filmISO,
       contrast: filmContrast,
-      color: filmColor,
+      vibrance: filmVib,
+      color: canisterColor, // Visual color
     };
 
     setInventory(prev => ({ ...prev, films: [...prev.films, newFilm] }));
@@ -86,6 +90,7 @@ function Lab({ onBack }) {
           type: 'lens',
           lensType: lensType,
           focalLength: lensType === 'prime' ? `${focalLength}mm` : zoomRange,
+          color: lensColor
       };
       setInventory(prev => ({ ...prev, lenses: [...prev.lenses, newLens] }));
       setActiveTab('overview');
@@ -116,10 +121,20 @@ function Lab({ onBack }) {
               <ul>{inventory.processors.map(i => <li key={i.id}>{i.name} ({i.arch})</li>)}</ul>
 
               <h4>Lenses ({inventory.lenses.length})</h4>
-              <ul>{inventory.lenses.map(i => <li key={i.id}>{i.name} ({i.focalLength})</li>)}</ul>
+              <ul>{inventory.lenses.map(i => (
+                  <li key={i.id} className="inv-item">
+                      <LensIcon color={i.color} size={30} />
+                      <span>{i.name} ({i.focalLength})</span>
+                  </li>
+              ))}</ul>
 
               <h4>Films ({inventory.films.length})</h4>
-              <ul>{inventory.films.map(i => <li key={i.id}>{i.name} ({i.format}, ISO {i.iso})</li>)}</ul>
+              <ul>{inventory.films.map(i => (
+                  <li key={i.id} className="inv-item">
+                      <FilmIcon color={i.color} size={30} />
+                      <span>{i.name} ({i.format}, ISO {i.iso})</span>
+                  </li>
+              ))}</ul>
           </div>
       </div>
   );
@@ -192,6 +207,16 @@ function Lab({ onBack }) {
                         </select>
                     </label>
                 )}
+
+                <label>Lens Housing Color:
+                    <input type="color" value={lensColor} onChange={e => setLensColor(e.target.value)} style={{width: '100%', height: '40px'}}/>
+                </label>
+
+                <div className="preview-box">
+                    <p>Preview:</p>
+                    <LensIcon color={lensColor} size={100} />
+                </div>
+
                 <button className="action-btn" onClick={handleCreateLens}>Develop Lens</button>
              </div>
         )}
@@ -211,9 +236,19 @@ function Lab({ onBack }) {
                 <label>Contrast: {filmContrast}%
                     <input type="range" min="0" max="100" value={filmContrast} onChange={e => setFilmContrast(e.target.value)} />
                 </label>
-                 <label>Color: {filmColor}% (0=B&W)
-                    <input type="range" min="0" max="100" value={filmColor} onChange={e => setFilmColor(e.target.value)} />
+                 <label>Vibrance: {filmVib}% (0=B&W)
+                    <input type="range" min="0" max="100" value={filmVib} onChange={e => setFilmVib(e.target.value)} />
                 </label>
+
+                <label>Canister Color:
+                    <input type="color" value={canisterColor} onChange={e => setCanisterColor(e.target.value)} style={{width: '100%', height: '40px'}}/>
+                </label>
+
+                <div className="preview-box">
+                    <p>Preview:</p>
+                    <FilmIcon color={canisterColor} size={100} />
+                </div>
+
                 <button className="action-btn" onClick={handleCreateFilm}>Develop Film</button>
              </div>
         )}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
+import { CameraIcon, FilmIcon, LensIcon } from './visuals/Icons';
 import './Sales.css';
 
 function Sales({ onBack }) {
@@ -120,9 +121,19 @@ function Sales({ onBack }) {
         );
     };
 
+    const renderIcon = (p, size=50) => {
+        if (p.productLine === 'film') return <FilmIcon color={p.color} size={size} />;
+        if (p.productLine === 'lens') return <LensIcon color={p.color} size={size} />;
+        // Camera
+        return <CameraIcon bodyColor={p.bodyColor} gripColor={p.gripColor} styleId={p.body} size={size} />;
+    };
+
     const renderActiveProduct = () => (
         <div className="product-details">
-            <h3>{selectedProduct.name} (On Market)</h3>
+            <div className="product-header-visual">
+                {renderIcon(selectedProduct, 80)}
+                <h3>{selectedProduct.name} (On Market)</h3>
+            </div>
             <div className="stats-grid">
                 <div className="stat">Price: ${selectedProduct.price}</div>
                 <div className="stat">Stock: {selectedProduct.stock}</div>
@@ -159,11 +170,16 @@ function Sales({ onBack }) {
                         {products.length === 0 && <p>No products manufactured yet.</p>}
                         {products.map(p => (
                             <div key={p.id} className="product-card" onClick={() => handleSelectProduct(p)}>
-                                <div className="p-info">
-                                    <span className="p-name">{p.name}</span>
-                                    <span className="p-status">{p.onSale ? '🟢 Selling' : '🔴 Unreleased'}</span>
+                                <div className="p-icon">
+                                    {renderIcon(p, 40)}
                                 </div>
-                                {p.onSale && <span className="p-revenue">+${p.revenueLastMonth?.toLocaleString()} last month</span>}
+                                <div className="p-details-col">
+                                    <div className="p-info">
+                                        <span className="p-name">{p.name}</span>
+                                        <span className="p-status">{p.onSale ? '🟢 Selling' : '🔴 Unreleased'}</span>
+                                    </div>
+                                    {p.onSale && <span className="p-revenue">+${p.revenueLastMonth?.toLocaleString()} last month</span>}
+                                </div>
                             </div>
                         ))}
                     </div>

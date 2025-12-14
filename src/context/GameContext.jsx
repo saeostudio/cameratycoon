@@ -27,25 +27,23 @@ export const GameProvider = ({ children }) => {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      // Increment date by 1 day
+      // Increment date by 1 Month
       setDate(prevDate => {
         const nextDate = new Date(prevDate);
-        nextDate.setDate(nextDate.getDate() + 1);
+        nextDate.setMonth(nextDate.getMonth() + 1);
         return nextDate;
       });
 
-      // Here we will eventually add logic for sales, expenses, etc.
-      // For now, it's just the clock ticking.
+      // Process Sales & Revenue
       setProducts(currentProducts => {
-        return currentProducts.map(p => {
+        let totalRevenueThisTick = 0;
+
+        const updatedProducts = currentProducts.map(p => {
             if (!p.onSale) return p;
 
             // Simple Sales Logic
             // Base sales on Quality vs Price ratio + Review Score
-            const ageInMonths = (new Date() - new Date(p.launchDate)) / MS_PER_DAY; // Rough approx
-            // Better: store launchTick or just decrement a 'monthsLeft' counter.
 
-            // Let's use a simpler approach: calculate sales this month
             // Ideal Price ~ Quality * 10
             const idealPrice = p.quality * 10;
             const priceFactor = idealPrice / (p.price || 1);
@@ -54,9 +52,7 @@ export const GameProvider = ({ children }) => {
             // Random variation
             let monthlySales = Math.floor(100 * priceFactor * reviewFactor * Math.random());
 
-            // Cap sales by stock (if we tracked stock, but for now we produce on demand or assume stock)
-            // The prompt says "pick how many get produced based on how much money the user has"
-            // So we should track stock.
+            // Cap sales by stock
             let sold = 0;
             if (p.stock >= monthlySales) {
                 sold = monthlySales;
@@ -64,14 +60,24 @@ export const GameProvider = ({ children }) => {
                 sold = p.stock;
             }
 
+            const revenue = sold * p.price;
+            totalRevenueThisTick += revenue;
+
             return {
                 ...p,
                 stock: p.stock - sold,
                 totalSold: (p.totalSold || 0) + sold,
-                revenueLastMonth: sold * p.price,
+                revenueLastMonth: revenue,
                 monthsOnMarket: (p.monthsOnMarket || 0) + 1
             };
         });
+
+        // Add revenue directly here to avoid double-counting in effects
+        if (totalRevenueThisTick > 0) {
+            setMoney(m => m + totalRevenueThisTick);
+        }
+
+        return updatedProducts;
       });
 
     }, MS_PER_DAY);
@@ -79,19 +85,6 @@ export const GameProvider = ({ children }) => {
     return () => clearInterval(timer);
   }, []);
 
-  // Separate effect to collect revenue
-  useEffect(() => {
-     let totalRevenue = 0;
-     products.forEach(p => {
-         if (p.revenueLastMonth) {
-             totalRevenue += p.revenueLastMonth;
-         }
-     });
-
-     if (totalRevenue > 0) {
-         setMoney(m => m + totalRevenue);
-     }
-  }, [products]);
 
   // Effect for Monthly Expenses (Staff)
   // We need to trigger this when date changes (monthly)
