@@ -67,6 +67,18 @@
     color: white;
 }
 
+.radio-group {
+    display: flex;
+    gap: 20px;
+}
+
+.radio-group label {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    font-weight: normal;
+}
+
 .action-btn {
     margin-top: 20px;
     background: var(--accent-color);

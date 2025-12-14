@@ -33,6 +33,7 @@ function Lab({ onBack }) {
   // Film State
   const [filmName, setFilmName] = useState('');
   const [filmType, setFilmType] = useState('35mm');
+  const [filmColorMode, setFilmColorMode] = useState('color'); // 'color' or 'bw'
   const [filmISO, setFilmISO] = useState(400);
   const [filmContrast, setFilmContrast] = useState(50);
   const [filmVib, setFilmVib] = useState(50);
@@ -80,6 +81,7 @@ function Lab({ onBack }) {
       name: filmName,
       type: 'film',
       format: filmType,
+      colorMode: filmColorMode,
       iso: filmISO,
       contrast: filmContrast,
       vibrance: filmVib,
@@ -151,7 +153,7 @@ function Lab({ onBack }) {
   // Dynamic Photo Preview Styles
   // B&W uses grayscale(100%).
   // Color uses Sepia + Saturation to simulate the warm/retro look of the vacation photo
-  const isBW = filmVib < 10;
+  const isBW = filmColorMode === 'bw';
 
   const photoPreviewStyle = {
       width: '100%',
@@ -274,15 +276,32 @@ function Lab({ onBack }) {
                             120 (Medium Format) {isLocked('film_type_120mm') ? '(Locked)' : ''}
                         </option>
                     </select>
+
+                    <label>Type:</label>
+                    <div className="radio-group">
+                         <label>
+                             <input type="radio" checked={filmColorMode === 'color'} onChange={() => setFilmColorMode('color')} />
+                             Color
+                         </label>
+                         <label>
+                             <input type="radio" checked={filmColorMode === 'bw'} onChange={() => setFilmColorMode('bw')} />
+                             B&W
+                         </label>
+                    </div>
+
                     <label>ISO: {filmISO}
                         <input type="range" min="50" max="3200" step="50" value={filmISO} onChange={e => setFilmISO(e.target.value)} />
                     </label>
                     <label>Contrast: {filmContrast}%
                         <input type="range" min="0" max="100" value={filmContrast} onChange={e => setFilmContrast(e.target.value)} />
                     </label>
-                     <label>Vibrance: {filmVib}%
-                        <input type="range" min="0" max="100" value={filmVib} onChange={e => setFilmVib(e.target.value)} />
-                    </label>
+
+                    {filmColorMode === 'color' && (
+                         <label>Vibrance: {filmVib}%
+                            <input type="range" min="0" max="100" value={filmVib} onChange={e => setFilmVib(e.target.value)} />
+                        </label>
+                    )}
+
                      <label>Grain: {filmGrain}%
                         <input type="range" min="0" max="100" value={filmGrain} onChange={e => setFilmGrain(e.target.value)} />
                     </label>
@@ -297,20 +316,15 @@ function Lab({ onBack }) {
                     <p>Photo Preview</p>
                     <div style={{position: 'relative'}}>
                         {/*
-                            Using a generic fallback src initially.
-                            We try to use the asset 'lab_preview.jpg' if available (which it isn't right now, but we prepare for it).
-                            Otherwise we fallback to a simple gradient or the 'no internet' svg.
+                            Try to load the user provided asset.
                         */}
                         <img
-                            src="/assets/lab_preview.jpg"
+                            src="/assets/20240925-collectie2.jpg"
                             alt="Lab Simulation Preview"
                             style={photoPreviewStyle}
                             onError={(e) => {
                                 e.target.onerror = null;
                                 e.target.style.display = 'none'; // Hide broken image
-                                e.target.parentNode.style.backgroundColor = '#ccc'; // Show fallback color on parent
-                                e.target.parentNode.style.height = '200px';
-                                e.target.parentNode.style.borderRadius = '8px';
                             }}
                         />
                          {/* Fallback div if image fails/is missing */}

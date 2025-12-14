@@ -5,6 +5,7 @@ import './Factory.css';
 
 const CAMERA_TYPES = [
     { id: 'camera_type_film', name: 'Film SLR', type: 'film', cost: 100 },
+    { id: 'camera_type_medium', name: 'Medium Format', type: 'film', cost: 250 },
     { id: 'camera_type_compact', name: 'Compact', type: 'digital', cost: 150 },
     { id: 'camera_type_dslr', name: 'DSLR', type: 'digital', cost: 300 },
     { id: 'camera_type_mirrorless', name: 'Mirrorless', type: 'digital', cost: 500 },
@@ -30,6 +31,7 @@ function Factory({ onFinish }) {
     const [productLine, setProductLine] = useState('camera'); // camera, film, lens
     const [isManufacturing, setIsManufacturing] = useState(false);
     const [progress, setProgress] = useState(0);
+    const [quantity, setQuantity] = useState(100);
 
     // Configuration State
     const [config, setConfig] = useState({
@@ -72,24 +74,36 @@ function Factory({ onFinish }) {
         return () => clearInterval(interval);
     }, [isManufacturing]);
 
+    const calculateUnitCost = () => {
+        let unitCost = 50;
+        if (productLine === 'camera') {
+            const camType = CAMERA_TYPES.find(c => c.id === config.type);
+            unitCost += camType ? camType.cost : 0;
+            if (config.batteryId) {
+                 const bat = BATTERIES.find(b => b.id === config.batteryId);
+                 if (bat) unitCost += bat.cost;
+            }
+            if (config.screenId) {
+                 const scr = SCREENS.find(s => s.id === config.screenId);
+                 if (scr) unitCost += scr.cost;
+            }
+            // Add component costs (simplified)
+        } else if (productLine === 'film' && config.designId) {
+             const design = inventory.films.find(i => i.id === config.designId);
+             unitCost = 2; // Drastically lower base cost for film
+             if (design && design.format === '120') unitCost += 3;
+        } else if (productLine === 'lens') {
+            unitCost = 30; // Base lens cost
+        }
+        return unitCost;
+    };
+
     const finishManufacturing = () => {
         setIsManufacturing(false);
 
         // Finalize Product Data
         const quality = calculateQuality();
-
-        // Calculate Base Cost
-        let unitCost = 50;
-        if (productLine === 'camera') {
-            const camType = CAMERA_TYPES.find(c => c.id === config.type);
-            unitCost += camType ? camType.cost : 0;
-            // Add component costs
-            // ...
-        } else if (productLine === 'film' && config.designId) {
-             const design = inventory.films.find(i => i.id === config.designId);
-             unitCost = 2; // Drastically lower base cost for film
-             if (design && design.format === '120') unitCost += 3;
-        }
+        const unitCost = calculateUnitCost();
 
         let extraProps = {};
         if (productLine !== 'camera' && config.designId) {
@@ -115,7 +129,7 @@ function Factory({ onFinish }) {
             quality,
             price: unitCost * 3, // Default markup
             reviews: [],
-            stock: 100, // Initial batch
+            stock: quantity, // Use selected quantity
             monthsOnMarket: 0
         };
 
@@ -286,13 +300,33 @@ function Factory({ onFinish }) {
         );
     };
 
-    const renderStep3_Build = () => (
-        <div className="factory-step">
-            <h3>Step 3: Manufacture</h3>
-            <div className="summary">
-                <p><strong>Product:</strong> {config.name}</p>
-                <p><strong>Line:</strong> {productLine.toUpperCase()}</p>
-                {/* Visuals Update: Industrial Grid */}
+    const renderStep3_Build = () => {
+        const unitCost = calculateUnitCost();
+        const totalCost = unitCost * quantity;
+
+        return (
+            <div className="factory-step">
+                <h3>Step 3: Manufacture</h3>
+                <div className="summary">
+                    <p><strong>Product:</strong> {config.name}</p>
+                    <p><strong>Line:</strong> {productLine.toUpperCase()}</p>
+                    <p><strong>Unit Cost:</strong> ${unitCost}</p>
+                </div>
+
+                <div className="quantity-control">
+                    <label>Batch Size: {quantity}</label>
+                    <input
+                        type="range"
+                        min="100"
+                        max="10000"
+                        step="100"
+                        value={quantity}
+                        onChange={e => setQuantity(Number(e.target.value))}
+                        disabled={isManufacturing}
+                    />
+                    <p>Total Cost: ${totalCost.toLocaleString()}</p>
+                </div>
+
                 <div className="factory-visuals-grid" style={{
                     backgroundImage: 'linear-gradient(to bottom, #2c3e50, #000000)',
                     backgroundSize: 'cover'
@@ -304,17 +338,20 @@ function Factory({ onFinish }) {
                     <div className="grid-cell">👷</div>
                     <div className="grid-cell"></div>
                 </div>
+
+                {!isManufacturing ? (
+                    <button className="start-build-btn" onClick={handleStartManufacturing}>
+                        Start Production (5s)
+                    </button>
+                ) : (
+                    <div className="manufacturing-status">
+                        <p>Manufacturing... (+10 RP/sec)</p>
+                        <progress value={progress} max="100"></progress>
+                    </div>
+                )}
             </div>
-            {!isManufacturing ? (
-                <button className="start-build-btn" onClick={handleStartManufacturing}>Start Production (5s)</button>
-            ) : (
-                <div className="manufacturing-status">
-                    <p>Manufacturing... (+10 RP/sec)</p>
-                    <progress value={progress} max="100"></progress>
-                </div>
-            )}
-        </div>
-    );
+        );
+    };
 
     return (
         <div className="factory-container">

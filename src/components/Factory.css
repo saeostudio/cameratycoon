@@ -18,3 +18,28 @@
     font-size: 2rem;
     border-radius: 4px;
 }
+
+.quantity-control {
+    background: #252525;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.quantity-control label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.quantity-control input[type="range"] {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.quantity-control p {
+    margin: 5px 0 0;
+    color: var(--accent-color);
+    font-weight: bold;
+    text-align: right;
+}

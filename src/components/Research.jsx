@@ -11,6 +11,13 @@ export const TECH_TREE = {
         type: 'camera_type',
         requires: []
     },
+    'camera_type_medium': {
+        name: 'Medium Format',
+        description: 'Professional film camera.',
+        cost: 800,
+        type: 'camera_type',
+        requires: ['camera_type_film']
+    },
     'camera_type_compact': {
         name: 'Compact Digital',
         description: 'Point and shoot convenience.',
