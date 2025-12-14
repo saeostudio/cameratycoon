@@ -75,33 +75,93 @@ function Sales({ onBack }) {
         // Clamp
         baseRating = Math.max(1, Math.min(5, baseRating));
 
+        // Detailed Feedback Logic
+        const getFeedback = (r) => {
+             const isPositive = r > 3.5;
+             const isNegative = r < 2.5;
+
+             // Tech aspects
+             if (p.productLine === 'camera') {
+                 if (isPositive) return [
+                     "The autofocus is snappy.",
+                     "Build quality feels premium.",
+                     "Great ergonomics.",
+                     "Shutter sound is satisfying.",
+                     "Battery life is surprisingly good."
+                 ];
+                 if (isNegative) return [
+                     "Focus is too slow.",
+                     "Feels cheap and plastic.",
+                     "Battery dies instantly.",
+                     "Too heavy for daily use.",
+                     "Menu system is a maze."
+                 ];
+             }
+             if (p.productLine === 'film') {
+                 if (isPositive) return [
+                     "Beautiful grain structure.",
+                     "Colors really pop.",
+                     "Great latitude.",
+                     "My new favorite stock.",
+                     "Classic look."
+                 ];
+                 if (isNegative) return [
+                     "Too grainy for my taste.",
+                     "Colors look muddy.",
+                     "Base is too thin.",
+                     "Scanned poorly.",
+                     "Not worth the price."
+                 ];
+             }
+             if (p.productLine === 'lens') {
+                 if (isPositive) return [
+                     "Sharp corner to corner.",
+                     "Creamy bokeh.",
+                     "Fast aperture is a lifesaver.",
+                     "No chromatic aberration.",
+                     "Solid metal construction."
+                 ];
+                 if (isNegative) return [
+                     "Soft wide open.",
+                     "Too much vignetting.",
+                     "Focus ring is gritty.",
+                     "Heavy distortion.",
+                     "Autofocus motor is loud."
+                 ];
+             }
+             return isPositive ? ["Excellent product.", "Recommend it."] : ["Waste of money.", "Avoid."];
+        };
+
         // Randomize
         const reviews = [];
-        const commentsPositive = ["Great value!", "Love it.", "Top quality.", "Good stuff."];
-        const commentsNegative = ["Too expensive.", "Garbage.", "Ripoff."];
-        const commentsNeutral = ["It's okay.", "Decent."];
 
         for (let i = 0; i < 4; i++) {
             let rating = baseRating + (Math.random() - 0.5);
             rating = Math.max(1, Math.min(5, rating));
 
-            let pool = commentsNeutral;
-            if (rating > 4) pool = commentsPositive;
-            if (rating < 2.5) pool = commentsNegative;
+            let pool = getFeedback(rating);
+            let text = pool[Math.floor(Math.random() * pool.length)];
 
             reviews.push({
                 id: i,
                 rating: Math.round(rating * 10) / 10,
-                text: pool[Math.floor(Math.random() * pool.length)]
+                text
             });
         }
         return reviews;
     };
 
+    const handleDeleteProduct = (e, productId) => {
+        e.stopPropagation(); // Prevent clicking the card
+        if (confirm("Are you sure you want to delete this product? You cannot undo this.")) {
+            setProducts(prev => prev.filter(p => p.id !== productId));
+        }
+    };
+
     const renderLaunchForm = () => {
         const isFilm = selectedProduct.productLine === 'film';
         const recommendedMin = isFilm ? 1 : 100;
-        const recommendedMax = isFilm ? 50 : 5000;
+        const recommendedMax = isFilm ? 50 : 2500; // Lowered max for cameras as requested
         const step = isFilm ? 0.5 : 10;
 
         return (
@@ -208,6 +268,7 @@ function Sales({ onBack }) {
                                         {p.onSale && <span>Revenue: ${p.revenueLastMonth?.toLocaleString() || 0}/mo</span>}
                                     </div>
                                 </div>
+                                <button className="delete-btn" onClick={(e) => handleDeleteProduct(e, p.id)}>🗑️</button>
                             </div>
                         ))}
                     </div>

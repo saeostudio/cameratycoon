@@ -78,6 +78,18 @@ function Staff({ onBack }) {
                         </div>
                     ))}
                 </div>
+
+                <div className="danger-zone">
+                     <h3>Administration</h3>
+                     <button className="reset-btn" onClick={() => {
+                         if (confirm("Are you sure? This will delete your company and all progress!")) {
+                             localStorage.clear();
+                             window.location.reload();
+                         }
+                     }}>
+                         ⚠️ DECLARE BANKRUPTCY (RESET GAME)
+                     </button>
+                </div>
             </div>
         </div>
     );

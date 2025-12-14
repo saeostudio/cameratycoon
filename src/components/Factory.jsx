@@ -162,19 +162,19 @@ function Factory({ onFinish }) {
     };
 
     const renderStep0_Line = () => (
-        <div className="factory-step">
+        <div className="factory-step centered">
              <h3>Select Production Line</h3>
-             <div className="grid-options">
-                 <button className={`option-card ${productLine === 'camera' ? 'selected' : ''}`} onClick={() => setProductLine('camera')}>
-                    <CameraIcon size={40} />
+             <div className="grid-options big-icons">
+                 <button className={`option-card huge ${productLine === 'camera' ? 'selected' : ''}`} onClick={() => setProductLine('camera')}>
+                    <CameraIcon size={80} />
                     <span>Camera</span>
                  </button>
-                 <button className={`option-card ${productLine === 'film' ? 'selected' : ''}`} onClick={() => setProductLine('film')}>
-                    <FilmIcon size={40} />
+                 <button className={`option-card huge ${productLine === 'film' ? 'selected' : ''}`} onClick={() => setProductLine('film')}>
+                    <FilmIcon size={80} />
                     <span>Film</span>
                  </button>
-                 <button className={`option-card ${productLine === 'lens' ? 'selected' : ''}`} onClick={() => setProductLine('lens')}>
-                    <LensIcon size={40} />
+                 <button className={`option-card huge ${productLine === 'lens' ? 'selected' : ''}`} onClick={() => setProductLine('lens')}>
+                    <LensIcon size={80} />
                     <span>Lens</span>
                  </button>
              </div>
@@ -314,11 +314,11 @@ function Factory({ onFinish }) {
                 </div>
 
                 <div className="quantity-control">
-                    <label>Batch Size: {quantity}</label>
+                    <label>Batch Size: {quantity.toLocaleString()}</label>
                     <input
                         type="range"
                         min="100"
-                        max="10000"
+                        max="100000"
                         step="100"
                         value={quantity}
                         onChange={e => setQuantity(Number(e.target.value))}

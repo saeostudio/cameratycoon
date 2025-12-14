@@ -1,60 +1,22 @@
-.staff-container {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+.danger-zone {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #444;
+    text-align: center;
 }
 
-.staff-header {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    background: #333;
-    border-bottom: 1px solid #444;
-}
-
-.staff-content {
-    padding: 20px;
-    flex: 1;
-    overflow-y: auto;
-}
-
-.staff-summary {
-    background: #2a2a2a;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    border: 1px solid #444;
-}
-
-.red {
-    color: #ef4444;
-}
-
-.employee-card, .applicant-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #222;
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 8px;
-    border: 1px solid #444;
-}
-
-.hire-btn {
-    background: var(--accent-color);
+.reset-btn {
+    background: #7f1d1d;
     color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
+    border: 1px solid #991b1b;
+    padding: 15px 30px;
+    font-size: 1rem;
+    font-weight: bold;
     cursor: pointer;
+    border-radius: 8px;
+    margin-top: 10px;
 }
 
-.fire-btn {
-    background: #ef4444;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
+.reset-btn:hover {
+    background: #991b1b;
 }
