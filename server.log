@@ -21,5 +21,7 @@ Port 3002 is in use, trying another one...
 10:35:15 PM [vite] (client) hmr update /src/components/Factory.css
 10:35:20 PM [vite] (client) hmr update /src/components/Staff.jsx
 10:35:24 PM [vite] (client) hmr update /src/components/Staff.css
-/components/Staff.jsx
-10:35:24 PM [vite] (client) hmr update /src/components/Staff.css
+11:00:10 PM [vite] (client) hmr update /src/components/Factory.jsx
+11:00:25 PM [vite] (client) hmr update /src/components/visuals/Icons.jsx
+s/Factory.jsx
+11:00:25 PM [vite] (client) hmr update /src/components/visuals/Icons.jsx

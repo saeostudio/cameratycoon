@@ -77,17 +77,34 @@ export const CameraIcon = ({ bodyColor = '#333', gripColor = '#111', type = 'cam
     // 1. Film Camera (Classic SLR look)
     const renderFilm = () => (
         <g filter="url(#dropShadow)">
+            {/* Grip (New) */}
+            <path d="M75 30 L85 30 L85 70 L75 70 Z" fill={gripColor} stroke="#111" strokeWidth="1" />
             {/* Prism */}
             <path d="M40 30 L50 20 L60 30 Z" fill="#222" stroke="#111" strokeWidth="1"/>
             {/* Main Body */}
-            <rect x="15" y="30" width="70" height="40" rx="2" fill={bodyColor} stroke="#111" strokeWidth="1" />
+            <rect x="15" y="30" width="60" height="40" rx="2" fill={bodyColor} stroke="#111" strokeWidth="1" />
             {/* Lens Mount */}
-            <circle cx="50" cy="50" r="16" fill="#333" stroke="#555" strokeWidth="2" />
-            <circle cx="50" cy="50" r="12" fill="#111" />
-            <circle cx="53" cy="47" r="4" fill="white" fillOpacity="0.2" />
+            <circle cx="45" cy="50" r="16" fill="#333" stroke="#555" strokeWidth="2" />
+            <circle cx="45" cy="50" r="12" fill="#111" />
+            <circle cx="48" cy="47" r="4" fill="white" fillOpacity="0.2" />
             {/* Dials */}
             <rect x="20" y="25" width="8" height="5" fill="#888" />
-            <rect x="70" y="25" width="10" height="5" fill="#888" />
+            <rect x="65" y="25" width="10" height="5" fill="#888" />
+        </g>
+    );
+
+    // 1.5 Medium Format (Boxy)
+    const renderMedium = () => (
+        <g filter="url(#dropShadow)">
+            {/* Main Body Box */}
+            <rect x="25" y="25" width="50" height="50" rx="1" fill={bodyColor} stroke="#111" strokeWidth="1" />
+             {/* Grip Side */}
+             <rect x="75" y="30" width="10" height="40" fill={gripColor} stroke="#111" />
+            {/* Lens */}
+            <circle cx="50" cy="50" r="18" fill="#111" stroke="#333" strokeWidth="2" />
+            <circle cx="50" cy="50" r="14" fill="url(#lensGrad)" />
+            {/* Viewfinder Top */}
+            <path d="M25 25 L35 15 L65 15 L75 25 Z" fill="#222" />
         </g>
     );
 
@@ -136,6 +153,7 @@ export const CameraIcon = ({ bodyColor = '#333', gripColor = '#111', type = 'cam
     if (type === 'camera_type_compact') return <svg width={size} height={size} viewBox="0 0 100 100">{DEFS}{renderCompact()}</svg>;
     if (type === 'camera_type_dslr') return <svg width={size} height={size} viewBox="0 0 100 100">{DEFS}{renderDSLR()}</svg>;
     if (type === 'camera_type_mirrorless') return <svg width={size} height={size} viewBox="0 0 100 100">{DEFS}{renderMirrorless()}</svg>;
+    if (type === 'camera_type_medium') return <svg width={size} height={size} viewBox="0 0 100 100">{DEFS}{renderMedium()}</svg>;
 
     // Default Film
     return <svg width={size} height={size} viewBox="0 0 100 100">{DEFS}{renderFilm()}</svg>;

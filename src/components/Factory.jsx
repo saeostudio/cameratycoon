@@ -26,7 +26,7 @@ const SCREENS = [
 ];
 
 function Factory({ onFinish }) {
-    const { inventory, unlocks, setResearchPoints, staff } = useGame();
+    const { inventory, unlocks, setResearchPoints, staff, money, setMoney } = useGame();
     const [step, setStep] = useState(0); // 0 = Product Line Selection
     const [productLine, setProductLine] = useState('camera'); // camera, film, lens
     const [isManufacturing, setIsManufacturing] = useState(false);
@@ -153,6 +153,15 @@ function Factory({ onFinish }) {
             if (!config.designId) return alert(`Please select a ${productLine} design!`);
         }
 
+        // Calculate and Deduct Cost
+        const unitCost = calculateUnitCost();
+        const totalCost = unitCost * quantity;
+
+        if (money < totalCost) {
+            return alert(`Not enough cash! You need $${totalCost.toLocaleString()}.`);
+        }
+
+        setMoney(prev => prev - totalCost);
         setIsManufacturing(true);
     };
 
