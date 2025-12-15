@@ -17,6 +17,21 @@ const PROCESSOR_ARCHITECTURES = [
     { id: 'adv_16bit', name: 'Advanced 16-bit', speed: 25, cost: 3000 },
 ];
 
+const APERTURES = [
+    { id: 'f4', name: 'f/4.0 (Standard)', cost: 0, unlockId: null },
+    { id: 'f2_8', name: 'f/2.8 (Fast)', cost: 50, unlockId: 'aperture_f2_8' },
+    { id: 'f1_8', name: 'f/1.8 (Very Fast)', cost: 150, unlockId: 'aperture_f1_8' },
+    { id: 'f1_4', name: 'f/1.4 (Pro)', cost: 300, unlockId: 'aperture_f1_4' },
+    { id: 'f1_2', name: 'f/1.2 (Legendary)', cost: 600, unlockId: 'aperture_f1_2' },
+];
+
+const GLASS_QUALITY = [
+    { id: 'standard', name: 'Standard Glass', cost: 0, unlockId: null },
+    { id: 'ed', name: 'ED Glass', cost: 100, unlockId: 'glass_ed' },
+    { id: 'aspherical', name: 'Aspherical', cost: 250, unlockId: 'glass_aspherical' },
+    { id: 'fluorite', name: 'Fluorite', cost: 500, unlockId: 'glass_fluorite' },
+];
+
 function Lab({ onBack }) {
   const { inventory, setInventory, unlocks } = useGame();
   const [activeTab, setActiveTab] = useState('sensor'); // sensor, film, lens, processor
@@ -46,6 +61,8 @@ function Lab({ onBack }) {
   const [focalLength, setFocalLength] = useState(50);
   const [zoomRange, setZoomRange] = useState('24-70');
   const [lensColor, setLensColor] = useState('#333333');
+  const [lensAperture, setLensAperture] = useState('f4');
+  const [lensGlass, setLensGlass] = useState('standard');
 
   // Processor State
   const [procName, setProcName] = useState('');
@@ -95,12 +112,18 @@ function Lab({ onBack }) {
 
   const handleCreateLens = () => {
       if (!lensName) return alert("Please name your lens.");
+
+      const apertureData = APERTURES.find(a => a.id === lensAperture);
+      const glassData = GLASS_QUALITY.find(g => g.id === lensGlass);
+
       const newLens = {
           id: Date.now(),
           name: lensName,
           type: 'lens',
           lensType: lensType,
           focalLength: lensType === 'prime' ? `${focalLength}mm` : zoomRange,
+          aperture: apertureData.name,
+          glass: glassData.name,
           color: lensColor
       };
       setInventory(prev => ({ ...prev, lenses: [...prev.lenses, newLens] }));
@@ -135,7 +158,7 @@ function Lab({ onBack }) {
               <ul>{inventory.lenses.map(i => (
                   <li key={i.id} className="inv-item">
                       <LensIcon color={i.color} size={30} />
-                      <span>{i.name} ({i.focalLength})</span>
+                      <span>{i.name} ({i.focalLength}, {i.aperture})</span>
                   </li>
               ))}</ul>
 
@@ -250,6 +273,32 @@ function Lab({ onBack }) {
                         </select>
                     </label>
                 )}
+
+                <label>Max Aperture:
+                    <select value={lensAperture} onChange={e => setLensAperture(e.target.value)}>
+                        {APERTURES.map(a => {
+                             const locked = isLocked(a.unlockId);
+                             return (
+                                 <option key={a.id} value={a.id} disabled={locked}>
+                                     {a.name} {locked ? '(Locked)' : ''}
+                                 </option>
+                             );
+                        })}
+                    </select>
+                </label>
+
+                <label>Glass Element:
+                    <select value={lensGlass} onChange={e => setLensGlass(e.target.value)}>
+                        {GLASS_QUALITY.map(g => {
+                             const locked = isLocked(g.unlockId);
+                             return (
+                                 <option key={g.id} value={g.id} disabled={locked}>
+                                     {g.name} {locked ? '(Locked)' : ''}
+                                 </option>
+                             );
+                        })}
+                    </select>
+                </label>
 
                 <label>Lens Housing Color:
                     <input type="color" value={lensColor} onChange={e => setLensColor(e.target.value)} style={{width: '100%', height: '40px'}}/>

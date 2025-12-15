@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import './Staff.css';
 
+// Updated Applicants with RP Bonus logic description
 const APPLICANTS = [
-    { id: 1, name: "Intern", skill: 1, cost: 1000 },
-    { id: 2, name: "Junior Engineer", skill: 5, cost: 5000 },
-    { id: 3, name: "Senior Engineer", skill: 15, cost: 15000 },
-    { id: 4, name: "Expert Optician", skill: 30, cost: 30000 },
-    { id: 5, name: "Visionary Leader", skill: 100, cost: 100000 },
+    { id: 1, name: "Intern", skill: 1, rpBonus: 5, cost: 1000 },
+    { id: 2, name: "Junior Engineer", skill: 5, rpBonus: 10, cost: 5000 },
+    { id: 3, name: "Senior Engineer", skill: 15, rpBonus: 25, cost: 15000 },
+    { id: 4, name: "Expert Optician", skill: 30, rpBonus: 50, cost: 30000 },
+    { id: 5, name: "Visionary Leader", skill: 100, rpBonus: 100, cost: 100000 },
 ];
 
 function Staff({ onBack }) {
-    const { staff, setStaff, money, setMoney } = useGame();
+    const { staff, setStaff, money, setMoney, hardReset } = useGame();
 
     const handleHire = (applicant) => {
         if (money < applicant.cost) {
@@ -33,7 +34,8 @@ function Staff({ onBack }) {
         setStaff(prev => prev.filter(s => s.uniqueId !== employee.uniqueId));
     };
 
-    const totalSkill = staff.reduce((acc, s) => acc + s.skill, 0);
+    const totalSkill = staff.reduce((acc, s) => acc + (s.skill || 0), 0);
+    const totalRpBonus = staff.reduce((acc, s) => acc + (s.rpBonus || 0), 0);
     const totalCost = staff.reduce((acc, s) => acc + s.cost, 0);
 
     return (
@@ -46,7 +48,8 @@ function Staff({ onBack }) {
             <div className="staff-content">
                 <div className="staff-summary">
                     <p>Total Staff: {staff.length}</p>
-                    <p>Total Skill Bonus: +{totalSkill}%</p>
+                    <p>Quality Bonus: +{totalSkill}%</p>
+                    <p>Research Speed: +{totalRpBonus}%</p>
                     <p>Monthly Payroll: <span className="red">-${totalCost.toLocaleString()}</span></p>
                 </div>
 
@@ -58,7 +61,9 @@ function Staff({ onBack }) {
                             <div>
                                 <strong>{s.name}</strong>
                                 <br />
-                                <small>Skill: {s.skill} | Cost: ${s.cost}/mo</small>
+                                <small>Quality: +{s.skill}% | RP Speed: +{s.rpBonus || 0}%</small>
+                                <br />
+                                <small>Cost: ${s.cost}/mo</small>
                             </div>
                             <button className="fire-btn" onClick={() => handleFire(s)}>Fire</button>
                         </div>
@@ -72,7 +77,9 @@ function Staff({ onBack }) {
                             <div>
                                 <strong>{a.name}</strong>
                                 <br />
-                                <small>Skill: +{a.skill} | ${a.cost}/mo</small>
+                                <small>Quality: +{a.skill}% | RP Speed: +{a.rpBonus}%</small>
+                                <br />
+                                <small>${a.cost}/mo</small>
                             </div>
                             <button className="hire-btn" onClick={() => handleHire(a)}>Hire</button>
                         </div>
@@ -83,8 +90,7 @@ function Staff({ onBack }) {
                      <h3>Administration</h3>
                      <button className="reset-btn" onClick={() => {
                          if (confirm("Are you sure? This will delete your company and all progress!")) {
-                             localStorage.clear();
-                             window.location.reload();
+                             hardReset();
                          }
                      }}>
                          ⚠️ DECLARE BANKRUPTCY (RESET GAME)

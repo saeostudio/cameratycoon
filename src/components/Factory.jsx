@@ -11,6 +11,20 @@ const CAMERA_TYPES = [
     { id: 'camera_type_mirrorless', name: 'Mirrorless', type: 'digital', cost: 500 },
 ];
 
+// Body Styles (1-10)
+const BODY_STYLES = [
+    { id: 'body_design_1', name: 'Standard Body', cost: 0, unlockId: null },
+    { id: 'body_design_2', name: 'Modern Body', cost: 10, unlockId: 'body_design_2' },
+    { id: 'body_design_3', name: 'Retro Body', cost: 20, unlockId: 'body_design_3' },
+    { id: 'body_design_4', name: 'Ergonomic Body', cost: 30, unlockId: 'body_design_4' },
+    { id: 'body_design_5', name: 'Compact Body', cost: 40, unlockId: 'body_design_5' },
+    { id: 'body_design_6', name: 'Pro Body', cost: 60, unlockId: 'body_design_6' },
+    { id: 'body_design_7', name: 'Futuristic Body', cost: 80, unlockId: 'body_design_7' },
+    { id: 'body_design_8', name: 'Titanium Body', cost: 100, unlockId: 'body_design_8' },
+    { id: 'body_design_9', name: 'Skeleton Body', cost: 150, unlockId: 'body_design_9' },
+    { id: 'body_design_10', name: 'Masterpiece Body', cost: 250, unlockId: 'body_design_10' },
+];
+
 const BATTERIES = [
     { id: 'aa', name: 'AA Batteries', capacity: 100, cost: 5, unlockId: null },
     { id: '2cr5', name: '2CR5', capacity: 300, cost: 15, unlockId: 'battery_high_cap' },
@@ -19,10 +33,10 @@ const BATTERIES = [
 ];
 
 const SCREENS = [
-    { id: 'none', name: 'No Screen', cost: 0, type: 'fixed' },
-    { id: 'fixed_3', name: '3" Fixed LCD', cost: 20, type: 'fixed' },
-    { id: 'tilt', name: '3" Tilt Screen', cost: 40, type: 'tilt' },
-    { id: 'fully_articulated', name: '3" Fully Articulated', cost: 60, type: 'articulated' },
+    { id: 'none', name: 'No Screen', cost: 0, type: 'fixed', unlockId: null },
+    { id: 'fixed_3', name: '3" Fixed LCD', cost: 20, type: 'fixed', unlockId: null },
+    { id: 'tilt', name: '3" Tilt Screen', cost: 40, type: 'tilt', unlockId: 'screen_tilt' },
+    { id: 'fully_articulated', name: '3" Fully Articulated', cost: 60, type: 'articulated', unlockId: 'screen_articulated' },
 ];
 
 function Factory({ onFinish }) {
@@ -38,6 +52,7 @@ function Factory({ onFinish }) {
         name: 'New Product',
         // Camera specific
         type: 'camera_type_film',
+        bodyStyleId: 'body_design_1',
         sensorId: '',
         processorId: '',
         screenId: 'fixed_3',
@@ -53,6 +68,15 @@ function Factory({ onFinish }) {
         hasFlash: true,
     });
 
+    // Calculate total staff RP bonus percentage
+    const totalRpBonus = staff.reduce((acc, s) => acc + (s.rpBonus || 0), 0);
+    const rpPerTick = 1 + (1 * (totalRpBonus / 100)); // Base 1 + % bonus
+
+    const isLocked = (unlockId) => {
+        if (!unlockId) return false;
+        return !unlocks.includes(unlockId);
+    };
+
     // Check unlocks
     const availableCameraTypes = CAMERA_TYPES.filter(t => unlocks.includes(t.id));
 
@@ -66,19 +90,23 @@ function Factory({ onFinish }) {
                         finishManufacturing();
                         return 100;
                     }
-                    setResearchPoints(rp => rp + 1);
+                    setResearchPoints(rp => rp + rpPerTick);
                     return prev + (100 / 50); // Speed up: 100% in 50 ticks (5s) for testing
                 });
             }, 100);
         }
         return () => clearInterval(interval);
-    }, [isManufacturing]);
+    }, [isManufacturing, rpPerTick]); // Re-run if RP bonus changes (e.g. staff hired mid-production? rare but safe)
 
     const calculateUnitCost = () => {
         let unitCost = 50;
         if (productLine === 'camera') {
             const camType = CAMERA_TYPES.find(c => c.id === config.type);
             unitCost += camType ? camType.cost : 0;
+
+            const bodyStyle = BODY_STYLES.find(b => b.id === config.bodyStyleId);
+            unitCost += bodyStyle ? bodyStyle.cost : 0;
+
             if (config.batteryId) {
                  const bat = BATTERIES.find(b => b.id === config.batteryId);
                  if (bat) unitCost += bat.cost;
@@ -165,10 +193,6 @@ function Factory({ onFinish }) {
         setIsManufacturing(true);
     };
 
-    const isLocked = (unlockId) => {
-        if (!unlockId) return false;
-        return !unlocks.includes(unlockId);
-    };
 
     const renderStep0_Line = () => (
         <div className="factory-step centered">
@@ -210,6 +234,21 @@ function Factory({ onFinish }) {
                             </button>
                         ))}
                     </div>
+
+                    <label>Body Style (Aesthetic & Form Factor):</label>
+                    <select
+                        value={config.bodyStyleId}
+                        onChange={e => setConfig({...config, bodyStyleId: e.target.value})}
+                    >
+                         {BODY_STYLES.map(b => {
+                             const locked = isLocked(b.unlockId);
+                             return (
+                                 <option key={b.id} value={b.id} disabled={locked}>
+                                     {b.name} {locked ? '(Locked)' : `(+$${b.cost})`}
+                                 </option>
+                             );
+                         })}
+                    </select>
 
                     <div className="color-config">
                         <label>Body Color:
@@ -287,7 +326,14 @@ function Factory({ onFinish }) {
 
                         <label>Screen:</label>
                         <select value={config.screenId} onChange={e => setConfig({...config, screenId: e.target.value})}>
-                            {SCREENS.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                            {SCREENS.map(s => {
+                                const locked = isLocked(s.unlockId);
+                                return (
+                                    <option key={s.id} value={s.id} disabled={locked}>
+                                        {s.name} {locked ? '(Locked)' : ''}
+                                    </option>
+                                );
+                            })}
                         </select>
                     </>
                 )}
@@ -354,7 +400,7 @@ function Factory({ onFinish }) {
                     </button>
                 ) : (
                     <div className="manufacturing-status">
-                        <p>Manufacturing... (+10 RP/sec)</p>
+                        <p>Manufacturing... (+{rpPerTick.toFixed(1)} RP/tick)</p>
                         <progress value={progress} max="100"></progress>
                     </div>
                 )}

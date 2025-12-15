@@ -2,26 +2,9 @@
 > app@1.0.0 dev
 > vite
 
-Port 3000 is in use, trying another one...
-Port 3001 is in use, trying another one...
-Port 3002 is in use, trying another one...
 
-  VITE v7.2.7  ready in 418 ms
+  VITE v7.2.7  ready in 666 ms
 
-  ➜  Local:   http://localhost:3003/
-  ➜  Network: http://192.168.0.2:3003/
-10:09:51 PM [vite] (client) hmr update /src/components/Factory.jsx
-10:09:56 PM [vite] (client) hmr update /src/components/Research.jsx
-10:34:32 PM [vite] (client) hmr update /src/components/Sales.jsx
-10:34:37 PM [vite] (client) hmr update /src/components/Sales.jsx
-10:34:37 PM [vite] (client) hmr update /src/components/Sales.jsx
-10:34:37 PM [vite] (client) hmr update /src/components/Sales.jsx
-10:34:41 PM [vite] (client) hmr update /src/components/Sales.css
-10:35:05 PM [vite] (client) hmr update /src/components/Factory.jsx
-10:35:15 PM [vite] (client) hmr update /src/components/Factory.css
-10:35:20 PM [vite] (client) hmr update /src/components/Staff.jsx
-10:35:24 PM [vite] (client) hmr update /src/components/Staff.css
-11:00:10 PM [vite] (client) hmr update /src/components/Factory.jsx
-11:00:25 PM [vite] (client) hmr update /src/components/visuals/Icons.jsx
-s/Factory.jsx
-11:00:25 PM [vite] (client) hmr update /src/components/visuals/Icons.jsx
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: http://192.168.0.2:3000/
+12:18:02 AM [vite] (client) hmr update /src/components/Factory.css

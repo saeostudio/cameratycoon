@@ -32,6 +32,7 @@ export const GameProvider = ({ children }) => {
   const [money, setMoney] = useState(initialState?.money ?? 500000);
   const [researchPoints, setResearchPoints] = useState(initialState?.researchPoints ?? 0);
   const [fans, setFans] = useState(initialState?.fans ?? 0);
+  const [gameStatus, setGameStatus] = useState(initialState?.gameStatus || 'playing'); // 'playing', 'game_over'
 
   // Company Identity
   const [company, setCompany] = useState(initialState?.company || { name: '', logo: '' });
@@ -52,8 +53,7 @@ export const GameProvider = ({ children }) => {
   const [staff, setStaff] = useState(initialState?.staff || []);
 
   // Game Loop Constants
-  const MS_PER_DAY = 5000; // Speed up a bit? 5s per month for smoother gameplay? Original was 10s. keeping 10s for now.
-  // Actually original was 10s for 1 month.
+  const MS_PER_DAY = 5000;
 
   // --- Persistence ---
 
@@ -68,7 +68,8 @@ export const GameProvider = ({ children }) => {
       unlocks,
       inventory,
       products,
-      staff
+      staff,
+      gameStatus
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(stateToSave));
     console.log("Game Saved");
@@ -82,87 +83,20 @@ export const GameProvider = ({ children }) => {
 
   // --- Game Loop ---
 
+  // Bankruptcy Check Loop
   useEffect(() => {
-    const timer = setInterval(() => {
-      // Increment date by 1 Month
-      setDate(prevDate => {
-        const nextDate = new Date(prevDate);
-        nextDate.setMonth(nextDate.getMonth() + 1);
-        return nextDate;
-      });
+      if (money <= 0 && gameStatus === 'playing') {
+          setGameStatus('game_over');
+      }
+  }, [money, gameStatus]);
 
-      // Process Sales & Revenue
-      setProducts(currentProducts => {
-        let totalRevenueThisTick = 0;
-        let totalNewFans = 0;
-
-        const updatedProducts = currentProducts.map(p => {
-            if (!p.onSale) return p;
-
-            // Simple Sales Logic
-            const idealPrice = p.quality * 15; // Increased multiplier slightly
-            const priceFactor = idealPrice / (p.price || 1);
-            const reviewFactor = p.rating ? (p.rating / 5) : 0.5;
-
-            // Random variation
-            // Sales impacted by Fans count? Maybe slightly.
-            let fanBoost = 1 + (fans / 1000000);
-
-            let monthlySales = Math.floor(100 * priceFactor * reviewFactor * fanBoost * Math.random());
-
-            // Cap sales by stock
-            let sold = 0;
-            if (p.stock >= monthlySales) {
-                sold = monthlySales;
-            } else {
-                sold = p.stock;
-            }
-
-            const revenue = sold * p.price;
-            totalRevenueThisTick += revenue;
-
-            // Fans growth based on sales of good products
-            if (p.rating > 3 && sold > 0) {
-                totalNewFans += Math.floor(sold * (p.rating - 2));
-            }
-
-            return {
-                ...p,
-                stock: p.stock - sold,
-                totalSold: (p.totalSold || 0) + sold,
-                revenueLastMonth: revenue,
-                monthsOnMarket: (p.monthsOnMarket || 0) + 1
-            };
-        });
-
-        if (totalRevenueThisTick > 0) {
-            setMoney(m => m + totalRevenueThisTick);
-        }
-        if (totalNewFans > 0) {
-            setFans(f => f + totalNewFans);
-        }
-
-        return updatedProducts;
-      });
-
-    }, 10000); // 10s per month
-
-    return () => clearInterval(timer);
-  }, [fans]); // Add fans to dependency if used in calc, but careful of re-triggering interval.
-  // Actually, using functional state updates inside the interval is safer to avoid resetting the timer.
-  // The 'fans' usage above inside the interval callback refers to the closure value.
-  // If I don't restart the timer, 'fans' will be stale (0).
-  // Fix: Use functional setProducts and pass fans in via ref or just restart timer?
-  // Restarting timer every render is bad.
-  // Best practice: Use a Ref for mutable values accessed inside interval, OR functional updates only.
-  // Since 'fans' affects sales, I need the current value.
-
-  // Let's refactor the Interval to not depend on 'fans' directly or use a Ref.
 
   const fansRef = React.useRef(fans);
   useEffect(() => { fansRef.current = fans; }, [fans]);
 
   useEffect(() => {
+      if (gameStatus !== 'playing') return;
+
       const timer = setInterval(() => {
         setDate(prev => {
             const next = new Date(prev);
@@ -211,16 +145,18 @@ export const GameProvider = ({ children }) => {
 
       }, 10000);
       return () => clearInterval(timer);
-  }, []);
+  }, [gameStatus]); // Add gameStatus dependency to stop loop on game over
 
 
   // Effect for Monthly Expenses (Staff)
   useEffect(() => {
+      if (gameStatus !== 'playing') return;
+
       const totalStaffCost = staff.reduce((acc, s) => acc + s.cost, 0);
       if (totalStaffCost > 0) {
           setMoney(m => m - totalStaffCost);
       }
-  }, [date, staff]);
+  }, [date, staff, gameStatus]);
 
 
   const addProduct = (product) => {
@@ -233,10 +169,38 @@ export const GameProvider = ({ children }) => {
       }
   };
 
-  const resetGame = () => {
+  // Hard Reset (Factory Reset)
+  const hardReset = () => {
       localStorage.removeItem(SAVE_KEY);
       window.location.reload();
   }
+
+  // Soft Reset (Play Again)
+  const softReset = () => {
+      // Preserve Company, Reset everything else
+      const freshState = {
+          date: new Date('1980-01-01T00:00:00'),
+          money: 500000,
+          researchPoints: 0,
+          fans: 0,
+          company: company, // Keep company
+          unlocks: ['camera_type_film', 'film_type_35mm', 'sensor_standard'],
+          inventory: {
+            sensors: [],
+            processors: [],
+            lenses: [],
+            bodies: [],
+            films: []
+          },
+          products: [],
+          staff: [],
+          gameStatus: 'playing'
+      };
+
+      // Save immediatley and reload to ensure clean state
+      localStorage.setItem(SAVE_KEY, JSON.stringify(freshState));
+      window.location.reload();
+  };
 
   const value = {
     date,
@@ -257,8 +221,10 @@ export const GameProvider = ({ children }) => {
     setMoney,
     setResearchPoints,
     setFans,
-    resetGame,
-    saveGame
+    hardReset,
+    softReset,
+    saveGame,
+    gameStatus
   };
 
   return (

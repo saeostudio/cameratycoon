@@ -19,7 +19,7 @@ function TopBar() {
     <header className="top-bar">
       <div className="status-group">
         <div className="status-item">
-            <span className="status-value money">${money.toLocaleString()}</span>
+            <span className={`status-value money ${money < 0 ? 'red-text' : ''}`}>${money.toLocaleString()}</span>
             <span>Cash</span>
         </div>
         <div className="status-item">
@@ -52,7 +52,7 @@ function BottomNav({ currentView, setView }) {
         { id: 'lab', label: 'Lab', icon: '🔬' },
         { id: 'factory', label: 'Factory', icon: '🏭' },
         { id: 'sales', label: 'Sales', icon: '🛒' },
-        { id: 'research', label: 'Research', icon: '🧪' }, // Was 'shop'
+        { id: 'research', label: 'Research', icon: '🧪' },
         { id: 'staff', label: 'Staff', icon: '👥' },
     ];
 
@@ -72,13 +72,33 @@ function BottomNav({ currentView, setView }) {
     );
 }
 
+function GameOverScreen() {
+    const { company, hardReset, softReset } = useGame();
+    return (
+        <div className="game-over-overlay">
+            <div className="game-over-modal">
+                <h1>BANKRUPTCY DECLARED</h1>
+                <p>The {company.name} legacy ends here.</p>
+                <div className="game-over-actions">
+                    <button className="reset-btn" onClick={hardReset}>Start Fresh (Hard Reset)</button>
+                    <button className="reset-btn soft" onClick={softReset}>Try Again (Keep Name & Logo)</button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function AppContent() {
     const [view, setView] = useState('lab');
-    const { company, addProduct } = useGame();
+    const { company, addProduct, gameStatus } = useGame();
 
     // If no company name, show onboarding
     if (!company || !company.name) {
         return <Onboarding />;
+    }
+
+    if (gameStatus === 'game_over') {
+        return <GameOverScreen />;
     }
 
     const renderView = () => {
