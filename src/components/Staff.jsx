@@ -47,25 +47,38 @@ function Staff({ onBack }) {
 
             <div className="staff-content">
                 <div className="staff-summary">
-                    <p>Total Staff: {staff.length}</p>
-                    <p>Quality Bonus: +{totalSkill}%</p>
-                    <p>Research Speed: +{totalRpBonus}%</p>
-                    <p>Monthly Payroll: <span className="red">-${totalCost.toLocaleString()}</span></p>
+                    <div className="summary-item">
+                        <p>Total Staff</p>
+                        <span>{staff.length}</span>
+                    </div>
+                    <div className="summary-item">
+                        <p>Quality Bonus</p>
+                        <span>+{totalSkill}%</span>
+                    </div>
+                    <div className="summary-item">
+                        <p>Research Speed</p>
+                        <span>+{totalRpBonus}%</span>
+                    </div>
+                    <div className="summary-item">
+                        <p>Monthly Payroll</p>
+                        <span className="red">-${totalCost.toLocaleString()}</span>
+                    </div>
                 </div>
 
                 <h3>Current Team</h3>
                 <div className="employee-list">
-                    {staff.length === 0 && <p>No employees hired.</p>}
+                    {staff.length === 0 && <p style={{color: '#666', gridColumn: '1/-1', textAlign: 'center'}}>No employees hired yet.</p>}
                     {staff.map(s => (
                         <div key={s.uniqueId} className="employee-card">
-                            <div>
+                            <div className="card-header">
                                 <strong>{s.name}</strong>
-                                <br />
-                                <small>Quality: +{s.skill}% | RP Speed: +{s.rpBonus || 0}%</small>
-                                <br />
-                                <small>Cost: ${s.cost}/mo</small>
                             </div>
-                            <button className="fire-btn" onClick={() => handleFire(s)}>Fire</button>
+                            <div className="stats-row">
+                                <span>Qual: +{s.skill}%</span>
+                                <span>RP: +{s.rpBonus || 0}%</span>
+                            </div>
+                            <div className="cost-display">-${s.cost}/mo</div>
+                            <button className="fire-btn" onClick={() => handleFire(s)}>Fire Employee</button>
                         </div>
                     ))}
                 </div>
@@ -74,26 +87,28 @@ function Staff({ onBack }) {
                 <div className="applicant-list">
                     {APPLICANTS.map(a => (
                         <div key={a.id} className="applicant-card">
-                            <div>
+                            <div className="card-header">
                                 <strong>{a.name}</strong>
-                                <br />
-                                <small>Quality: +{a.skill}% | RP Speed: +{a.rpBonus}%</small>
-                                <br />
-                                <small>${a.cost}/mo</small>
                             </div>
-                            <button className="hire-btn" onClick={() => handleHire(a)}>Hire</button>
+                            <div className="stats-row">
+                                <span>Qual: +{a.skill}%</span>
+                                <span>RP: +{a.rpBonus}%</span>
+                            </div>
+                            <div className="cost-display">${a.cost}/mo</div>
+                            <button className="hire-btn" onClick={() => handleHire(a)}>Hire Now</button>
                         </div>
                     ))}
                 </div>
 
                 <div className="danger-zone">
-                     <h3>Administration</h3>
+                     <h3>Corporate Restructuring</h3>
+                     <p style={{color:'#f87171', marginBottom: '20px'}}>Warning: This action cannot be undone.</p>
                      <button className="reset-btn" onClick={() => {
                          if (confirm("Are you sure? This will delete your company and all progress!")) {
                              hardReset();
                          }
                      }}>
-                         ⚠️ DECLARE BANKRUPTCY (RESET GAME)
+                         ⚠️ DECLARE BANKRUPTCY
                      </button>
                 </div>
             </div>

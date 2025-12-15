@@ -101,6 +101,15 @@ export const TECH_TREE = {
         requires: ['screen_tilt']
     },
 
+    // --- Megapixels ---
+    'sensor_mp_3': { name: '3 Megapixels', description: 'Early digital resolution.', cost: 200, type: 'sensor_tech', requires: [] },
+    'sensor_mp_10': { name: '10 Megapixels', description: 'Standard digital resolution.', cost: 500, type: 'sensor_tech', requires: ['sensor_mp_3'] },
+    'sensor_mp_18': { name: '18 Megapixels', description: 'High detail.', cost: 1000, type: 'sensor_tech', requires: ['sensor_mp_10'] },
+    'sensor_mp_24': { name: '24 Megapixels', description: 'Industry standard.', cost: 2000, type: 'sensor_tech', requires: ['sensor_mp_18'] },
+    'sensor_mp_48': { name: '48 Megapixels', description: 'Ultra high resolution.', cost: 4000, type: 'sensor_tech', requires: ['sensor_mp_24'] },
+    'sensor_mp_72': { name: '72 Megapixels', description: 'Professional studio quality.', cost: 8000, type: 'sensor_tech', requires: ['sensor_mp_48'] },
+    'sensor_mp_100': { name: '100 Megapixels', description: 'Medium format territory.', cost: 15000, type: 'sensor_tech', requires: ['sensor_mp_72'] },
+
     // --- Body Designs ---
     'body_design_2': { name: 'Modern Body', description: 'Sleeker grip design.', cost: 200, type: 'body_style', requires: [] },
     'body_design_3': { name: 'Retro Body', description: 'Vintage appeal.', cost: 400, type: 'body_style', requires: ['body_design_2'] },
@@ -147,7 +156,8 @@ const Research = () => {
         'Body Styles': [],
         'Film Types': [],
         'Components': [],
-        'Optics': []
+        'Optics': [],
+        'Sensor Tech': []
     };
 
     Object.entries(TECH_TREE).forEach(([key, tech]) => {
@@ -155,6 +165,7 @@ const Research = () => {
         else if (tech.type === 'film_type') groups['Film Types'].push({key, ...tech});
         else if (tech.type === 'body_style') groups['Body Styles'].push({key, ...tech});
         else if (tech.type === 'lens_tech') groups['Optics'].push({key, ...tech});
+        else if (tech.type === 'sensor_tech') groups['Sensor Tech'].push({key, ...tech});
         else groups['Components'].push({key, ...tech});
     });
 

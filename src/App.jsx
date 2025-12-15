@@ -6,6 +6,7 @@ import Sales from './components/Sales';
 import Staff from './components/Staff';
 import Research from './components/Research';
 import Onboarding from './components/Onboarding';
+import Events from './components/Events';
 import './index.css';
 
 function TopBar() {
@@ -90,7 +91,7 @@ function GameOverScreen() {
 
 function AppContent() {
     const [view, setView] = useState('lab');
-    const { company, addProduct, gameStatus } = useGame();
+    const { company, addProduct, gameStatus, activeEvent, setActiveEvent, handleEventAction } = useGame();
 
     // If no company name, show onboarding
     if (!company || !company.name) {
@@ -129,6 +130,12 @@ function AppContent() {
                 {renderView()}
             </main>
             <BottomNav currentView={view} setView={setView} />
+
+            <Events
+                event={activeEvent}
+                onClose={() => setActiveEvent(null)}
+                onAction={handleEventAction}
+            />
         </div>
     );
 }

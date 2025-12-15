@@ -4,21 +4,20 @@ import { CameraIcon, FilmIcon, LensIcon } from './visuals/Icons';
 import './Sales.css';
 
 function Sales({ onBack }) {
-    const { products, setProducts, money, setMoney, date } = useGame();
+    const { products, setProducts, money, setMoney, date, inventory } = useGame();
     const [selectedProduct, setSelectedProduct] = useState(null);
 
     // Launch Form State
     const [launchPrice, setLaunchPrice] = useState(500);
     const [marketingBudget, setMarketingBudget] = useState(0);
+    const [selectedKitLens, setSelectedKitLens] = useState(''); // ID of lens design to bundle
 
     const handleSelectProduct = (product) => {
         setSelectedProduct(product);
         if (!product.onSale) {
             // Defaults
-            // Better defaults based on product line
             let defaultPrice = product.price || product.quality * 10;
             if (product.productLine === 'film') {
-                 // Target 5-20 EUR range
                  defaultPrice = Math.max(5, Math.min(20, Math.round(product.quality / 5)));
             }
             setLaunchPrice(defaultPrice);
@@ -38,7 +37,7 @@ function Sales({ onBack }) {
         }
 
         // Generate Reviews (Initial buzz)
-        const reviews = generateReviews(selectedProduct, launchPrice);
+        const reviews = generateReviews(selectedProduct, launchPrice, selectedKitLens);
         const avgRating = reviews.reduce((a, b) => a + b.rating, 0) / reviews.length;
 
         const updatedProduct = {
@@ -48,20 +47,25 @@ function Sales({ onBack }) {
             launchDate: new Date(date),
             reviews,
             rating: avgRating,
-            marketingBudget: marketingBudget
+            marketingBudget: marketingBudget,
+            kitLensId: selectedKitLens || null
         };
 
         setProducts(prev => prev.map(p => p.id === selectedProduct.id ? updatedProduct : p));
         setSelectedProduct(null);
     };
 
-    const generateReviews = (p, price) => {
-        // Updated Value Logic
+    const generateReviews = (p, price, kitLensId) => {
+        // Value Logic
         let idealPrice = p.quality * 15;
 
-        // Adjust for film (expecting much lower prices)
+        // Kit Value Bonus
+        if (kitLensId) {
+            idealPrice += 300; // Arbitrary value add for a kit
+        }
+
         if (p.productLine === 'film') {
-            idealPrice = p.quality * 0.25; // Quality 50 -> Ideal 12.50
+            idealPrice = p.quality * 0.25;
         }
 
         const value = idealPrice / price;
@@ -83,18 +87,18 @@ function Sales({ onBack }) {
              // Tech aspects
              if (p.productLine === 'camera') {
                  if (isPositive) return [
-                     "The autofocus is snappy.",
-                     "Build quality feels premium.",
-                     "Great ergonomics.",
-                     "Shutter sound is satisfying.",
-                     "Battery life is surprisingly good."
+                     p.batteryId ? "Great battery life." : "Power management is good.",
+                     p.screenId === 'fully_articulated' ? "Love the flip screen!" : "Screen is sharp.",
+                     p.sensorId ? "Image quality is stunning." : "Colors are perfect.",
+                     kitLensId ? "The kit lens is surprisingly sharp." : "Good ergonomics.",
+                     "Autofocus nails it every time."
                  ];
                  if (isNegative) return [
-                     "Focus is too slow.",
-                     "Feels cheap and plastic.",
-                     "Battery dies instantly.",
-                     "Too heavy for daily use.",
-                     "Menu system is a maze."
+                     p.batteryId === 'aa' ? "Eats batteries like crazy." : "Battery life is weak.",
+                     p.screenId === 'none' ? "Really miss having a screen." : "Screen washes out in sun.",
+                     "Images are too noisy.",
+                     "Colors look oversaturated.",
+                     "Menu system is confusing."
                  ];
              }
              if (p.productLine === 'film') {
@@ -160,8 +164,9 @@ function Sales({ onBack }) {
 
     const renderLaunchForm = () => {
         const isFilm = selectedProduct.productLine === 'film';
+        const isCamera = selectedProduct.productLine === 'camera';
         const recommendedMin = isFilm ? 1 : 100;
-        const recommendedMax = isFilm ? 50 : 2500; // Lowered max for cameras as requested
+        const recommendedMax = isFilm ? 50 : 5000;
         const step = isFilm ? 0.5 : 10;
 
         return (
@@ -175,6 +180,19 @@ function Sales({ onBack }) {
                     <input type="range" min={recommendedMin} max={recommendedMax} step={step} value={launchPrice} onChange={e => setLaunchPrice(Number(e.target.value))} />
                     <input type="number" value={launchPrice} onChange={e => setLaunchPrice(Number(e.target.value))} />
                 </div>
+
+                {isCamera && (
+                    <div className="form-group">
+                        <label>Sell as Kit (Bundle Lens):</label>
+                        <select value={selectedKitLens} onChange={e => setSelectedKitLens(e.target.value)}>
+                            <option value="">Body Only</option>
+                            {inventory.lenses.map(l => (
+                                <option key={l.id} value={l.id}>{l.name} ({l.focalLength})</option>
+                            ))}
+                        </select>
+                        <p className="hint">Bundling a lens increases perceived value.</p>
+                    </div>
+                )}
 
                 <div className="form-group">
                     <label>Marketing Budget: ${marketingBudget}</label>

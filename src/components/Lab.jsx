@@ -32,13 +32,33 @@ const GLASS_QUALITY = [
     { id: 'fluorite', name: 'Fluorite', cost: 500, unlockId: 'glass_fluorite' },
 ];
 
+const MEGAPIXELS = [
+    { value: 1, unlockId: null },
+    { value: 3, unlockId: 'sensor_mp_3' },
+    { value: 10, unlockId: 'sensor_mp_10' },
+    { value: 18, unlockId: 'sensor_mp_18' },
+    { value: 24, unlockId: 'sensor_mp_24' },
+    { value: 48, unlockId: 'sensor_mp_48' },
+    { value: 72, unlockId: 'sensor_mp_72' },
+    { value: 100, unlockId: 'sensor_mp_100' },
+];
+
+const FOREIGN_BRANDS = [
+    { name: "Leicasonic", prestige: 1.5 },
+    { name: "Fujirol", prestige: 1.2 },
+    { name: "Kodakon", prestige: 1.0 },
+    { name: "Samsa", prestige: 0.8 },
+    { name: "CheapCam Co.", prestige: 0.5 }
+];
+
 function Lab({ onBack }) {
-  const { inventory, setInventory, unlocks } = useGame();
+  const { inventory, setInventory, unlocks, setMoney } = useGame();
   const [activeTab, setActiveTab] = useState('sensor'); // sensor, film, lens, processor
 
   // Forms State
   const [sensorName, setSensorName] = useState('');
   const [selectedSensorSize, setSelectedSensorSize] = useState(SENSOR_SIZES[0].id);
+  const [selectedMP, setSelectedMP] = useState(1);
 
   const isLocked = (unlockId) => {
       if (!unlockId) return false;
@@ -79,12 +99,33 @@ function Lab({ onBack }) {
       type: 'sensor',
       size: sizeData.name,
       sizeId: sizeData.id,
-      quality: Math.floor(Math.random() * 10) + 10,
+      megapixels: selectedMP,
+      quality: Math.floor(Math.random() * 10) + 10 + (selectedMP / 2),
     };
 
     setInventory(prev => ({ ...prev, sensors: [...prev.sensors, newSensor] }));
     setActiveTab('overview');
   };
+
+  const handleSellSensor = (sensor) => {
+      // Logic: Prestige brands pay more for better tech.
+      const buyer = FOREIGN_BRANDS[Math.floor(Math.random() * FOREIGN_BRANDS.length)];
+
+      const mpVal = sensor.megapixels * 1000;
+      const sizeVal = sensor.sizeId === 'fullframe' ? 50000 : (sensor.sizeId === 'medium' ? 100000 : 5000);
+      const qualVal = (sensor.quality || 10) * 500;
+
+      let baseOffer = mpVal + sizeVal + qualVal;
+      let finalOffer = Math.floor(baseOffer * buyer.prestige);
+
+      if (confirm(`Foreign brand "${buyer.name}" offers $${finalOffer.toLocaleString()} for the rights to "${sensor.name}".\n\n(Brand Prestige: ${buyer.prestige}x)\n\nAccept offer? This will remove the design from your inventory.`)) {
+          setMoney(m => m + finalOffer);
+          setInventory(prev => ({
+              ...prev,
+              sensors: prev.sensors.filter(s => s.id !== sensor.id)
+          }));
+      }
+  }
 
   const handleCreateFilm = () => {
     if (!filmName) return alert("Please name your film.");
@@ -149,7 +190,12 @@ function Lab({ onBack }) {
           <h3>Inventory</h3>
           <div className="inventory-list">
               <h4>Sensors ({inventory.sensors.length})</h4>
-              <ul>{inventory.sensors.map(i => <li key={i.id}>{i.name} ({i.size})</li>)}</ul>
+              <ul>{inventory.sensors.map(i => (
+                  <li key={i.id} className="inv-item-row">
+                      <span>{i.name} ({i.megapixels}MP, {i.size})</span>
+                      <button className="sell-rights-btn" onClick={() => handleSellSensor(i)}>Sell Rights</button>
+                  </li>
+              ))}</ul>
 
               <h4>Processors ({inventory.processors.length})</h4>
               <ul>{inventory.processors.map(i => <li key={i.id}>{i.name} ({i.arch})</li>)}</ul>
@@ -236,6 +282,38 @@ function Lab({ onBack }) {
                   );
               })}
             </select>
+
+            <label>Resolution (MP): {selectedMP}MP</label>
+            <input
+                type="range"
+                min="0"
+                max={MEGAPIXELS.length - 1}
+                step="1"
+                value={MEGAPIXELS.findIndex(m => m.value === selectedMP)}
+                onChange={e => {
+                    const idx = Number(e.target.value);
+                    const mp = MEGAPIXELS[idx];
+                    if (!isLocked(mp.unlockId)) {
+                        setSelectedMP(mp.value);
+                    }
+                }}
+            />
+            <div className="mp-selector">
+                {MEGAPIXELS.map(mp => {
+                    const locked = isLocked(mp.unlockId);
+                    return (
+                        <button
+                            key={mp.value}
+                            className={`mp-btn ${selectedMP === mp.value ? 'selected' : ''} ${locked ? 'locked' : ''}`}
+                            onClick={() => !locked && setSelectedMP(mp.value)}
+                            disabled={locked}
+                        >
+                            {mp.value}MP
+                        </button>
+                    )
+                })}
+            </div>
+
             <button className="action-btn" onClick={handleCreateSensor}>Develop Sensor</button>
           </div>
         )}
