@@ -8,3 +8,5 @@
   ➜  Local:   http://localhost:3000/
   ➜  Network: http://192.168.0.2:3000/
 12:18:02 AM [vite] (client) hmr update /src/components/Factory.css
+1:01:09 AM [vite] vite.config.js changed, restarting server...
+1:01:09 AM [vite] server restarted.
