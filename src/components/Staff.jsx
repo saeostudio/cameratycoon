@@ -12,11 +12,11 @@ const APPLICANTS = [
 ];
 
 function Staff({ onBack }) {
-    const { staff, setStaff, money, setMoney, hardReset } = useGame();
+    const { staff, setStaff, money, setMoney, hardReset, addAlert } = useGame();
 
     const handleHire = (applicant) => {
         if (money < applicant.cost) {
-            alert("Not enough money for signing bonus/first month!");
+            addAlert("Not enough money for signing bonus/first month!");
             return;
         }
 

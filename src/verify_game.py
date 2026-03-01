@@ -34,7 +34,7 @@ def verify_lab_tech(page):
 
     # Check that Medium Format is disabled/locked
     # We can check if the option is disabled or text contains 'Locked'
-    page.wait_for_selector('option:has-text("Medium Format (Locked)")')
+    page.wait_for_selector('option:has-text("Medium Format (Locked)")', state='attached')
 
     # Screenshot Lab
     page.screenshot(path='/home/jules/verification/lab_locked.png')

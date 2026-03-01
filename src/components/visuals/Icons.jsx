@@ -69,7 +69,25 @@ export const LensIcon = ({ color = '#333', size = 50 }) => (
     </svg>
 );
 
-export const CameraIcon = ({ bodyColor = '#333', gripColor = '#111', type = 'camera_type_film', size = 50 }) => {
+export const CameraIcon = ({ bodyColor = '#333', gripColor = '#111', type = 'camera_type_film', size = 50, hasFlash = false, flashType = 'none', hasTallyLight = false }) => {
+
+
+    const renderAddons = (x, y, isFlashCenter = true) => (
+        <g>
+            {hasFlash && flashType === 'popup' && (
+                <path d={`M${x-5} ${y} L${x+5} ${y} L${x+3} ${y-8} L${x-3} ${y-8} Z`} fill="#111" stroke="#333" strokeWidth="1" />
+            )}
+            {hasFlash && flashType === 'popup' && (
+                <rect x={x-2} y={y-7} width="4" height="3" fill="#fff" />
+            )}
+            {hasFlash && flashType === 'builtin' && (
+                <rect x={x+15} y={y+5} width="6" height="4" fill="#fff" stroke="#333" strokeWidth="1" />
+            )}
+            {hasTallyLight && (
+                <circle cx={x+15} cy={y+15} r="2" fill="#ef4444" />
+            )}
+        </g>
+    );
 
     // Helper for Isometric/3D look
     // Using simple shapes with perspective-like drawing
@@ -115,6 +133,7 @@ export const CameraIcon = ({ bodyColor = '#333', gripColor = '#111', type = 'cam
             <circle cx="40" cy="52" r="10" fill="#222" stroke="#555" strokeWidth="1" />
             <circle cx="40" cy="52" r="6" fill="url(#lensGrad)" />
             <rect x="65" y="38" width="10" height="4" fill="#888" />
+            {renderAddons(50, 35)}
         </g>
     );
 
@@ -131,6 +150,7 @@ export const CameraIcon = ({ bodyColor = '#333', gripColor = '#111', type = 'cam
             <circle cx="58" cy="52" r="18" fill="#222" stroke="#444" strokeWidth="3" />
             <circle cx="58" cy="52" r="14" fill="url(#lensGrad)" />
             <circle cx="62" cy="48" r="5" fill="white" fillOpacity="0.3" />
+            {renderAddons(58, 20)}
         </g>
     );
 
@@ -146,6 +166,7 @@ export const CameraIcon = ({ bodyColor = '#333', gripColor = '#111', type = 'cam
             {/* Large Lens */}
             <circle cx="50" cy="50" r="19" fill="#111" stroke="#888" strokeWidth="1" />
             <circle cx="50" cy="50" r="15" fill="url(#lensGrad)" />
+            {renderAddons(50, 22)}
         </g>
     );
 

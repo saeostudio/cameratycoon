@@ -5,31 +5,39 @@ import './Lab.css';
 
 // Tech Tree helpers
 const SENSOR_SIZES = [
-  { id: '1/2.55', name: '1/2.55"', baseCost: 500, unlockId: null }, // Always available
-  { id: '1inch', name: '1 Inch', baseCost: 2000, unlockId: 'sensor_standard' },
-  { id: 'apsc', name: 'APS-C', baseCost: 5000, unlockId: 'sensor_advanced' },
-  { id: 'fullframe', name: 'Full Frame', baseCost: 10000, unlockId: 'sensor_advanced' },
-  { id: 'medium', name: 'Medium Format', baseCost: 20000, unlockId: 'sensor_advanced' },
+  { id: '1/2.55', name: '1/2.55"', baseCost: 250, unlockId: null }, // Always available
+  { id: '1inch', name: '1 Inch', baseCost: 1000, unlockId: 'sensor_standard' },
+  { id: 'apsc', name: 'APS-C', baseCost: 2500, unlockId: 'sensor_advanced' },
+  { id: 'fullframe', name: 'Full Frame', baseCost: 5000, unlockId: 'sensor_advanced' },
+  { id: 'medium', name: 'Medium Format', baseCost: 10000, unlockId: 'sensor_advanced' },
+];
+
+
+const SENSOR_STRUCTURES = [
+    { id: 'cmos', name: 'CMOS', baseCost: 0, unlockId: null },
+    { id: 'bsi', name: 'BSI-CMOS', baseCost: 100, unlockId: 'sensor_bsi' },
+    { id: 'xtrans', name: 'X-Trans', baseCost: 200, unlockId: 'sensor_xtrans' },
+    { id: 'stacked', name: 'Stacked CMOS', baseCost: 300, unlockId: 'sensor_stacked' },
 ];
 
 const PROCESSOR_ARCHITECTURES = [
-    { id: 'basic_8bit', name: 'Basic 8-bit', speed: 10, cost: 1000 },
-    { id: 'adv_16bit', name: 'Advanced 16-bit', speed: 25, cost: 3000 },
+    { id: 'basic_8bit', name: 'Basic 8-bit', speed: 10, cost: 500 },
+    { id: 'adv_16bit', name: 'Advanced 16-bit', speed: 25, cost: 1500 },
 ];
 
 const APERTURES = [
     { id: 'f4', name: 'f/4.0 (Standard)', cost: 0, unlockId: null },
-    { id: 'f2_8', name: 'f/2.8 (Fast)', cost: 50, unlockId: 'aperture_f2_8' },
-    { id: 'f1_8', name: 'f/1.8 (Very Fast)', cost: 150, unlockId: 'aperture_f1_8' },
-    { id: 'f1_4', name: 'f/1.4 (Pro)', cost: 300, unlockId: 'aperture_f1_4' },
-    { id: 'f1_2', name: 'f/1.2 (Legendary)', cost: 600, unlockId: 'aperture_f1_2' },
+    { id: 'f2_8', name: 'f/2.8 (Fast)', cost: 25, unlockId: 'aperture_f2_8' },
+    { id: 'f1_8', name: 'f/1.8 (Very Fast)', cost: 75, unlockId: 'aperture_f1_8' },
+    { id: 'f1_4', name: 'f/1.4 (Pro)', cost: 150, unlockId: 'aperture_f1_4' },
+    { id: 'f1_2', name: 'f/1.2 (Legendary)', cost: 300, unlockId: 'aperture_f1_2' },
 ];
 
 const GLASS_QUALITY = [
     { id: 'standard', name: 'Standard Glass', cost: 0, unlockId: null },
-    { id: 'ed', name: 'ED Glass', cost: 100, unlockId: 'glass_ed' },
-    { id: 'aspherical', name: 'Aspherical', cost: 250, unlockId: 'glass_aspherical' },
-    { id: 'fluorite', name: 'Fluorite', cost: 500, unlockId: 'glass_fluorite' },
+    { id: 'ed', name: 'ED Glass', cost: 50, unlockId: 'glass_ed' },
+    { id: 'aspherical', name: 'Aspherical', cost: 125, unlockId: 'glass_aspherical' },
+    { id: 'fluorite', name: 'Fluorite', cost: 250, unlockId: 'glass_fluorite' },
 ];
 
 const MEGAPIXELS = [
@@ -52,13 +60,14 @@ const FOREIGN_BRANDS = [
 ];
 
 function Lab({ onBack }) {
-  const { inventory, setInventory, unlocks, setMoney } = useGame();
+  const { inventory, setInventory, unlocks, setMoney, addAlert } = useGame();
   const [activeTab, setActiveTab] = useState('sensor'); // sensor, film, lens, processor
 
   // Forms State
   const [sensorName, setSensorName] = useState('');
   const [selectedSensorSize, setSelectedSensorSize] = useState(SENSOR_SIZES[0].id);
   const [selectedMP, setSelectedMP] = useState(1);
+  const [selectedSensorStructure, setSelectedSensorStructure] = useState(SENSOR_STRUCTURES[0].id);
 
   const isLocked = (unlockId) => {
       if (!unlockId) return false;
@@ -90,8 +99,10 @@ function Lab({ onBack }) {
 
 
   const handleCreateSensor = () => {
-    if (!sensorName) return alert("Please name your sensor.");
+    if (!sensorName) return addAlert("Please name your sensor.");
     const sizeData = SENSOR_SIZES.find(s => s.id === selectedSensorSize);
+
+    const structData = SENSOR_STRUCTURES.find(s => s.id === selectedSensorStructure);
 
     const newSensor = {
       id: Date.now(),
@@ -99,8 +110,10 @@ function Lab({ onBack }) {
       type: 'sensor',
       size: sizeData.name,
       sizeId: sizeData.id,
+      structure: structData.name,
+      structureId: structData.id,
       megapixels: selectedMP,
-      quality: Math.floor(Math.random() * 10) + 10 + (selectedMP / 2),
+      quality: Math.floor(Math.random() * 10) + 10 + (selectedMP / 2) + (structData.baseCost / 50),
     };
 
     setInventory(prev => ({ ...prev, sensors: [...prev.sensors, newSensor] }));
@@ -113,9 +126,10 @@ function Lab({ onBack }) {
 
       const mpVal = sensor.megapixels * 1000;
       const sizeVal = sensor.sizeId === 'fullframe' ? 50000 : (sensor.sizeId === 'medium' ? 100000 : 5000);
+      const structVal = sensor.structureId === 'stacked' ? 20000 : (sensor.structureId === 'xtrans' ? 10000 : (sensor.structureId === 'bsi' ? 5000 : 0));
       const qualVal = (sensor.quality || 10) * 500;
 
-      let baseOffer = mpVal + sizeVal + qualVal;
+      let baseOffer = mpVal + sizeVal + structVal + qualVal;
       let finalOffer = Math.floor(baseOffer * buyer.prestige);
 
       if (confirm(`Foreign brand "${buyer.name}" offers $${finalOffer.toLocaleString()} for the rights to "${sensor.name}".\n\n(Brand Prestige: ${buyer.prestige}x)\n\nAccept offer? This will remove the design from your inventory.`)) {
@@ -128,7 +142,7 @@ function Lab({ onBack }) {
   }
 
   const handleCreateFilm = () => {
-    if (!filmName) return alert("Please name your film.");
+    if (!filmName) return addAlert("Please name your film.");
 
     // Cost logic adjustments
     const is120 = filmType === '120';
@@ -152,7 +166,7 @@ function Lab({ onBack }) {
   };
 
   const handleCreateLens = () => {
-      if (!lensName) return alert("Please name your lens.");
+      if (!lensName) return addAlert("Please name your lens.");
 
       const apertureData = APERTURES.find(a => a.id === lensAperture);
       const glassData = GLASS_QUALITY.find(g => g.id === lensGlass);
@@ -172,7 +186,7 @@ function Lab({ onBack }) {
   };
 
   const handleCreateProcessor = () => {
-      if (!procName) return alert("Please name your processor.");
+      if (!procName) return addAlert("Please name your processor.");
       const arch = PROCESSOR_ARCHITECTURES.find(a => a.id === procArch);
       const newProc = {
           id: Date.now(),
@@ -192,7 +206,7 @@ function Lab({ onBack }) {
               <h4>Sensors ({inventory.sensors.length})</h4>
               <ul>{inventory.sensors.map(i => (
                   <li key={i.id} className="inv-item-row">
-                      <span>{i.name} ({i.megapixels}MP, {i.size})</span>
+                      <span>{i.name} ({i.megapixels}MP, {i.size}, {i.structure})</span>
                       <button className="sell-rights-btn" onClick={() => handleSellSensor(i)}>Sell Rights</button>
                   </li>
               ))}</ul>
@@ -274,6 +288,19 @@ function Lab({ onBack }) {
             <label>Size:</label>
             <select value={selectedSensorSize} onChange={e => setSelectedSensorSize(e.target.value)}>
               {SENSOR_SIZES.map(s => {
+                  const locked = isLocked(s.unlockId);
+                  return (
+                    <option key={s.id} value={s.id} disabled={locked}>
+                        {s.name} {locked ? '(Locked)' : ''}
+                    </option>
+                  );
+              })}
+            </select>
+
+
+            <label>Structure:</label>
+            <select value={selectedSensorStructure} onChange={e => setSelectedSensorStructure(e.target.value)}>
+              {SENSOR_STRUCTURES.map(s => {
                   const locked = isLocked(s.unlockId);
                   return (
                     <option key={s.id} value={s.id} disabled={locked}>
