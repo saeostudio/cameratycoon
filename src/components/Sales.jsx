@@ -4,7 +4,7 @@ import { CameraIcon, FilmIcon, LensIcon } from './visuals/Icons';
 import './Sales.css';
 
 function Sales({ onBack }) {
-    const { products, setProducts, money, setMoney, date, inventory } = useGame();
+    const { products, setProducts, money, setMoney, date, inventory, addAlert } = useGame();
     const [selectedProduct, setSelectedProduct] = useState(null);
 
     // Launch Form State
@@ -29,7 +29,7 @@ function Sales({ onBack }) {
 
         // Marketing cost
         if (money < marketingBudget) {
-            alert(`Not enough money for marketing! Need $${marketingBudget}`);
+            addAlert(`Not enough money for marketing! Need $${marketingBudget}`);
             return;
         }
         if (marketingBudget > 0) {

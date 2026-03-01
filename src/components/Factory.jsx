@@ -14,33 +14,54 @@ const CAMERA_TYPES = [
 // Body Styles (1-10)
 const BODY_STYLES = [
     { id: 'body_design_1', name: 'Standard Body', cost: 0, unlockId: null },
-    { id: 'body_design_2', name: 'Modern Body', cost: 10, unlockId: 'body_design_2' },
-    { id: 'body_design_3', name: 'Retro Body', cost: 20, unlockId: 'body_design_3' },
-    { id: 'body_design_4', name: 'Ergonomic Body', cost: 30, unlockId: 'body_design_4' },
-    { id: 'body_design_5', name: 'Compact Body', cost: 40, unlockId: 'body_design_5' },
-    { id: 'body_design_6', name: 'Pro Body', cost: 60, unlockId: 'body_design_6' },
-    { id: 'body_design_7', name: 'Futuristic Body', cost: 80, unlockId: 'body_design_7' },
-    { id: 'body_design_8', name: 'Titanium Body', cost: 100, unlockId: 'body_design_8' },
-    { id: 'body_design_9', name: 'Skeleton Body', cost: 150, unlockId: 'body_design_9' },
-    { id: 'body_design_10', name: 'Masterpiece Body', cost: 250, unlockId: 'body_design_10' },
+    { id: 'body_design_2', name: 'Modern Body', cost: 5, unlockId: 'body_design_2' },
+    { id: 'body_design_3', name: 'Retro Body', cost: 10, unlockId: 'body_design_3' },
+    { id: 'body_design_4', name: 'Ergonomic Body', cost: 15, unlockId: 'body_design_4' },
+    { id: 'body_design_5', name: 'Compact Body', cost: 20, unlockId: 'body_design_5' },
+    { id: 'body_design_6', name: 'Pro Body', cost: 30, unlockId: 'body_design_6' },
+    { id: 'body_design_7', name: 'Futuristic Body', cost: 40, unlockId: 'body_design_7' },
+    { id: 'body_design_8', name: 'Titanium Body', cost: 50, unlockId: 'body_design_8' },
+    { id: 'body_design_9', name: 'Skeleton Body', cost: 75, unlockId: 'body_design_9' },
+    { id: 'body_design_10', name: 'Masterpiece Body', cost: 125, unlockId: 'body_design_10' },
+];
+
+
+const VIDEO_RESOLUTIONS = [
+    { id: 'none', name: 'No Video', cost: 0, unlockId: null },
+    { id: '1080p', name: '1080p Full HD', cost: 100, unlockId: 'video_1080p' },
+    { id: '4k', name: '4K Ultra HD', cost: 500, unlockId: 'video_4k' },
+    { id: '8k', name: '8K Cinematic', cost: 1500, unlockId: 'video_8k' },
+];
+
+const VIDEO_FRAMERATES = [
+    { id: 'none', name: 'None', cost: 0, unlockId: null },
+    { id: '24', name: '24fps Cinematic', cost: 50, unlockId: 'video_fps_24' },
+    { id: '60', name: '60fps Smooth', cost: 200, unlockId: 'video_fps_60' },
+    { id: '120', name: '120fps Slow-Mo', cost: 600, unlockId: 'video_fps_120' },
+];
+
+const FLASH_TYPES = [
+    { id: 'none', name: 'No Flash', cost: 0, unlockId: null },
+    { id: 'builtin', name: 'Built-in Flash', cost: 50, unlockId: 'flash_builtin' },
+    { id: 'popup', name: 'Pop-up Flash', cost: 150, unlockId: 'flash_popup' },
 ];
 
 const BATTERIES = [
-    { id: 'aa', name: 'AA Batteries', capacity: 100, cost: 5, unlockId: null },
-    { id: '2cr5', name: '2CR5', capacity: 300, cost: 15, unlockId: 'battery_high_cap' },
-    { id: 'np-w126s', name: 'NP-W126S', capacity: 800, cost: 30, unlockId: 'battery_high_cap' },
-    { id: 'np-w235', name: 'NP-W235', capacity: 1500, cost: 50, unlockId: 'battery_high_cap' },
+    { id: 'aa', name: 'AA Batteries', capacity: 100, cost: 2, unlockId: null },
+    { id: '2cr5', name: '2CR5', capacity: 300, cost: 7, unlockId: 'battery_high_cap' },
+    { id: 'np-w126s', name: 'NP-W126S', capacity: 800, cost: 15, unlockId: 'battery_high_cap' },
+    { id: 'np-w235', name: 'NP-W235', capacity: 1500, cost: 25, unlockId: 'battery_high_cap' },
 ];
 
 const SCREENS = [
     { id: 'none', name: 'No Screen', cost: 0, type: 'fixed', unlockId: null },
-    { id: 'fixed_3', name: '3" Fixed LCD', cost: 20, type: 'fixed', unlockId: null },
-    { id: 'tilt', name: '3" Tilt Screen', cost: 40, type: 'tilt', unlockId: 'screen_tilt' },
-    { id: 'fully_articulated', name: '3" Fully Articulated', cost: 60, type: 'articulated', unlockId: 'screen_articulated' },
+    { id: 'fixed_3', name: '3" Fixed LCD', cost: 10, type: 'fixed', unlockId: null },
+    { id: 'tilt', name: '3" Tilt Screen', cost: 20, type: 'tilt', unlockId: 'screen_tilt' },
+    { id: 'fully_articulated', name: '3" Fully Articulated', cost: 30, type: 'articulated', unlockId: 'screen_articulated' },
 ];
 
 function Factory({ onFinish }) {
-    const { inventory, unlocks, setResearchPoints, staff, money, setMoney } = useGame();
+    const { inventory, unlocks, setResearchPoints, staff, money, setMoney, addAlert } = useGame();
     const [step, setStep] = useState(0); // 0 = Product Line Selection
     const [productLine, setProductLine] = useState('camera'); // camera, film, lens
     const [isManufacturing, setIsManufacturing] = useState(false);
@@ -57,6 +78,13 @@ function Factory({ onFinish }) {
         processorId: '',
         screenId: 'fixed_3',
         batteryId: 'aa',
+
+        videoResId: 'none',
+        videoFpsId: 'none',
+        flashId: 'none',
+        hasTallyLight: false,
+        filmSimId: '',
+
 
         // Visuals
         bodyColor: '#333333',
@@ -115,6 +143,23 @@ function Factory({ onFinish }) {
                  const scr = SCREENS.find(s => s.id === config.screenId);
                  if (scr) unitCost += scr.cost;
             }
+
+            if (config.videoResId) {
+                const v = VIDEO_RESOLUTIONS.find(v => v.id === config.videoResId);
+                if (v) unitCost += v.cost;
+            }
+            if (config.videoFpsId) {
+                const f = VIDEO_FRAMERATES.find(v => v.id === config.videoFpsId);
+                if (f) unitCost += f.cost;
+            }
+            if (config.flashId) {
+                const f = FLASH_TYPES.find(v => v.id === config.flashId);
+                if (f) unitCost += f.cost;
+            }
+            if (config.hasTallyLight) {
+                unitCost += 75; // Base tally light cost
+            }
+
             // Add component costs (simplified)
         } else if (productLine === 'film' && config.designId) {
              const design = inventory.films.find(i => i.id === config.designId);
@@ -171,14 +216,14 @@ function Factory({ onFinish }) {
     };
 
     const handleStartManufacturing = () => {
-        if (!config.name) return alert("Please name your product.");
+        if (!config.name) return addAlert("Please name your product.");
 
         if (productLine === 'camera') {
             const isDigital = config.type !== 'camera_type_film';
-            if (isDigital && !config.sensorId) return alert("Digital cameras need a sensor!");
-            if (isDigital && !config.processorId) return alert("Digital cameras need a processor!");
+            if (isDigital && !config.sensorId) return addAlert("Digital cameras need a sensor!");
+            if (isDigital && !config.processorId) return addAlert("Digital cameras need a processor!");
         } else {
-            if (!config.designId) return alert(`Please select a ${productLine} design!`);
+            if (!config.designId) return addAlert(`Please select a ${productLine} design!`);
         }
 
         // Calculate and Deduct Cost
@@ -186,7 +231,7 @@ function Factory({ onFinish }) {
         const totalCost = unitCost * quantity;
 
         if (money < totalCost) {
-            return alert(`Not enough cash! You need $${totalCost.toLocaleString()}.`);
+            return addAlert(`Not enough cash! You need $${totalCost.toLocaleString()}.`);
         }
 
         setMoney(prev => prev - totalCost);
@@ -265,6 +310,9 @@ function Factory({ onFinish }) {
                             type={config.type}
                             bodyColor={config.bodyColor}
                             gripColor={config.gripColor}
+                            hasFlash={config.flashId === 'popup' || config.flashId === 'builtin'}
+                            flashType={config.flashId}
+                            hasTallyLight={config.hasTallyLight}
                             size={120}
                         />
                     </div>
@@ -322,6 +370,61 @@ function Factory({ onFinish }) {
                         <select value={config.processorId} onChange={e => setConfig({...config, processorId: e.target.value})}>
                              <option value="">Select Processor...</option>
                              {inventory.processors.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </select>
+
+
+                        <label>Video Resolution:</label>
+                        <select value={config.videoResId} onChange={e => setConfig({...config, videoResId: e.target.value})}>
+                            {VIDEO_RESOLUTIONS.map(s => {
+                                const locked = isLocked(s.unlockId);
+                                return (
+                                    <option key={s.id} value={s.id} disabled={locked}>
+                                        {s.name} {locked ? '(Locked)' : ''}
+                                    </option>
+                                );
+                            })}
+                        </select>
+
+                        <label>Video Framerate:</label>
+                        <select value={config.videoFpsId} onChange={e => setConfig({...config, videoFpsId: e.target.value})}>
+                            {VIDEO_FRAMERATES.map(s => {
+                                const locked = isLocked(s.unlockId);
+                                return (
+                                    <option key={s.id} value={s.id} disabled={locked}>
+                                        {s.name} {locked ? '(Locked)' : ''}
+                                    </option>
+                                );
+                            })}
+                        </select>
+
+                        <label>Flash System:</label>
+                        <select value={config.flashId} onChange={e => setConfig({...config, flashId: e.target.value})}>
+                            {FLASH_TYPES.map(s => {
+                                const locked = isLocked(s.unlockId);
+                                return (
+                                    <option key={s.id} value={s.id} disabled={locked}>
+                                        {s.name} {locked ? '(Locked)' : ''}
+                                    </option>
+                                );
+                            })}
+                        </select>
+
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={config.hasTallyLight}
+                                onChange={e => setConfig({...config, hasTallyLight: e.target.checked})}
+                                disabled={isLocked('tally_light')}
+                            />
+                            Tally Light {isLocked('tally_light') ? '(Locked)' : ''}
+                        </label>
+
+                        <label>Film Simulation (Optional):</label>
+                        <select value={config.filmSimId} onChange={e => setConfig({...config, filmSimId: e.target.value})}>
+                            <option value="">None</option>
+                            {inventory.films.map(f => (
+                                <option key={f.id} value={f.id}>{f.name}</option>
+                            ))}
                         </select>
 
                         <label>Screen:</label>

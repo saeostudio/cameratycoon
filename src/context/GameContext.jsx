@@ -54,6 +54,7 @@ export const GameProvider = ({ children }) => {
 
   // Events & Notifications
   const [activeEvent, setActiveEvent] = useState(null);
+  const [activeAlerts, setActiveAlerts] = useState([]);
 
   // Game Loop Constants
   const MS_PER_DAY = 5000;
@@ -259,7 +260,7 @@ export const GameProvider = ({ children }) => {
                   setMoney(m => m - activeEvent.cost);
                   setActiveEvent(null);
               } else {
-                  alert("Not enough money! You must withdraw the product.");
+                  addAlert("Not enough money! You must withdraw the product.");
               }
           } else if (action === 'giveup') {
               // User surrendered. Remove product AND design.
@@ -308,6 +309,16 @@ export const GameProvider = ({ children }) => {
       if (!unlocks.includes(techKey)) {
           setUnlocks(prev => [...prev, techKey]);
       }
+  };
+
+
+  const addAlert = (message, type = 'info') => {
+      const id = Date.now() + Math.random();
+      setActiveAlerts(prev => [...prev, { id, message, type }]);
+  };
+
+  const removeAlert = (id) => {
+      setActiveAlerts(prev => prev.filter(alert => alert.id !== id));
   };
 
   // Hard Reset (Factory Reset)
@@ -368,6 +379,9 @@ export const GameProvider = ({ children }) => {
     gameStatus,
     activeEvent,
     setActiveEvent,
+    addAlert,
+    removeAlert,
+    activeAlerts,
     handleEventAction
   };
 

@@ -89,6 +89,49 @@ function GameOverScreen() {
     );
 }
 
+
+function AlertsOverlay() {
+    const { activeAlerts, removeAlert } = useGame();
+    if (!activeAlerts || activeAlerts.length === 0) return null;
+
+    return (
+        <div className="alerts-overlay" style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            zIndex: 3000,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px'
+        }}>
+            {activeAlerts.map(alert => (
+                <div key={alert.id} className={`alert-box alert-${alert.type}`} style={{
+                    background: '#333',
+                    color: '#fff',
+                    padding: '15px 20px',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    minWidth: '250px',
+                    borderLeft: `4px solid ${alert.type === 'error' ? '#ef4444' : '#3b82f6'}`
+                }}>
+                    <span>{alert.message}</span>
+                    <button onClick={() => removeAlert(alert.id)} style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#aaa',
+                        cursor: 'pointer',
+                        fontSize: '18px',
+                        marginLeft: '15px'
+                    }}>✕</button>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 function AppContent() {
     const [view, setView] = useState('lab');
     const { company, addProduct, gameStatus, activeEvent, setActiveEvent, handleEventAction } = useGame();
@@ -131,6 +174,7 @@ function AppContent() {
             </main>
             <BottomNav currentView={view} setView={setView} />
 
+            <AlertsOverlay />
             <Events
                 event={activeEvent}
                 onClose={() => setActiveEvent(null)}
